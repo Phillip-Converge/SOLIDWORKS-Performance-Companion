@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Message formats shared by the app and the SOLIDWORKS add-in.
+       netstandard2.0 so the .NET Framework 4.8 add-in (Phase 3) can use it too. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+</Project>

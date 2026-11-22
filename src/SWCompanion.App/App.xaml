@@ -1,0 +1,20 @@
+<Application x:Class="SWCompanion.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!--
+                    Pick the look by changing this one line:
+                      Themes/Modern.xaml    clean and modern, light (current; ModernDark.xaml is its dark version)
+                      Themes/Studio.xaml    light, Teenage Engineering-inspired
+                      Themes/Terminal.xaml  retro green screen
+                    Cyberpunk.xaml is an older look kept for reference; it does not
+                    have all the names the window needs, so it won't load as is.
+                -->
+                <ResourceDictionary Source="Themes/Modern.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

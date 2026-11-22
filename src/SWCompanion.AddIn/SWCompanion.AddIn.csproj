@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The SOLIDWORKS add-in (Phase 3). Runs inside SOLIDWORKS, so it targets .NET Framework 4.8
+       like SOLIDWORKS itself. It only listens to SOLIDWORKS events and passes notes to the Companion. -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>SWCompanion.AddIn</AssemblyName>
+    <RootNamespace>SWCompanion.AddIn</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+    <!-- SOLIDWORKS's API files, found at build time from the installed SOLIDWORKS (worked out per PC, never hard-coded per user). -->
+    <SolidWorksApi Condition="'$(SolidWorksApi)' == ''">$(ProgramW6432)\SOLIDWORKS Corp\SOLIDWORKS\api\redist</SolidWorksApi>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Microsoft's reference files for building .NET Framework 4.8 code without Visual Studio. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The message format, compiled straight into the add-in so it is one file with no extra DLLs to find. -->
+    <Compile Include="..\SWCompanion.Contracts\AddinMessage.cs" Link="Contracts\AddinMessage.cs" />
+    <Compile Include="..\SWCompanion.Contracts\AddinOutbox.cs" Link="Contracts\AddinOutbox.cs" />
+    <Compile Include="..\SWCompanion.Contracts\ProductInfo.cs" Link="Contracts\ProductInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Copied next to the add-in: Windows' registration tool (RegAsm) needs them there to read the add-in.
+         They are SOLIDWORKS's own files from this PC's install; the build folder is never committed or published. -->
+    <Reference Include="SolidWorks.Interop.sldworks"><HintPath>$(SolidWorksApi)\SolidWorks.Interop.sldworks.dll</HintPath><Private>true</Private><EmbedInteropTypes>false</EmbedInteropTypes></Reference>
+    <Reference Include="SolidWorks.Interop.swconst"><HintPath>$(SolidWorksApi)\SolidWorks.Interop.swconst.dll</HintPath><Private>true</Private><EmbedInteropTypes>false</EmbedInteropTypes></Reference>
+    <Reference Include="SolidWorks.Interop.swpublished"><HintPath>$(SolidWorksApi)\SolidWorks.Interop.swpublished.dll</HintPath><Private>true</Private><EmbedInteropTypes>false</EmbedInteropTypes></Reference>
+  </ItemGroup>
+</Project>

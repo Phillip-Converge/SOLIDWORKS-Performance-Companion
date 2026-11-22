@@ -1,0 +1,11 @@
+<Project>
+  <!-- Settings shared by every project in this folder. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Company>Companion for SOLIDWORKS</Company>
+    <Product>Companion for SOLIDWORKS</Product>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+</Project>

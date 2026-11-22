@@ -1,0 +1,16 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio and editor files
+.vs/
+*.user
+*.suo
+
+# Runtime output from the app (logs, hang reports, dumps)
+data/logs/
+data/reports/
+*.dmp
+
+# Downloads built by scripts\Publish-Release.ps1
+dist/

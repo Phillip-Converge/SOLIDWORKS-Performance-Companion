@@ -1,0 +1,1331 @@
+<Window x:Class="SWCompanion.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Companion for SOLIDWORKS" Width="1000" Height="860" MinWidth="660" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BodyPattern}" Foreground="{StaticResource Text}">
+    <Window.Resources>
+        <!-- The one clear next step: a rounded, filled button (the guide's main action) -->
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Pill" Background="{DynamicResource Accent}" CornerRadius="22" Padding="22,11">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Pill" Property="Opacity" Value="0.88" /></Trigger>
+                            <Trigger Property="IsPressed" Value="True"><Setter TargetName="Pill" Property="Opacity" Value="0.75" /></Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Pill" Property="Opacity" Value="0.4" /></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Sidebar page buttons: quiet until picked; the picked one is tinted -->
+        <Style x:Key="NavIcon" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Margin" Value="0,1,12,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="NavButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="14.5" />
+            <Setter Property="Foreground" Value="{DynamicResource Text}" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Row" Background="Transparent" CornerRadius="10" Padding="12,9">
+                            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Row" Property="Background" Value="{DynamicResource Bg}" /></Trigger>
+                            <Trigger Property="Tag" Value="on"><Setter TargetName="Row" Property="Background" Value="{DynamicResource Selection}" /></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="on">
+                    <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>        <!-- Reply buttons under the conversation: rounded pills; the suggested answer is filled -->
+        <Style x:Key="ReplyChip" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+            <Setter Property="Margin" Value="0,0,8,6" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Pill" Background="Transparent" BorderBrush="{DynamicResource Accent}" BorderThickness="1.5" CornerRadius="18" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Pill" Property="Opacity" Value="0.85" /></Trigger>
+                            <Trigger Property="Tag" Value="on"><Setter TargetName="Pill" Property="Background" Value="{DynamicResource Accent}" /></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="on"><Setter Property="Foreground" Value="White" /><Setter Property="FontWeight" Value="SemiBold" /></Trigger>
+            </Style.Triggers>
+        </Style>
+        <!-- Text boxes follow the light or dark look (Windows' own default is always white). -->
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource Bg}" />
+            <Setter Property="Foreground" Value="{DynamicResource Text}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource Text}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource Accent}" />
+        </Style>
+        <Style TargetType="PasswordBox">
+            <Setter Property="Background" Value="{DynamicResource Bg}" />
+            <Setter Property="Foreground" Value="{DynamicResource Text}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource Text}" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource Text}" />
+        </Style>    </Window.Resources>    <Grid x:Name="RootGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Sidebar: the name and the pages ===== -->
+        <Border Background="{DynamicResource Module}" BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0">
+            <DockPanel Margin="16,22,14,18">
+                <StackPanel DockPanel.Dock="Top" Margin="8,0,0,24">
+                    <TextBlock Text="Companion" FontSize="22" FontWeight="SemiBold" />
+                    <TextBlock Text="for SOLIDWORKS" Style="{StaticResource Label}" />
+                </StackPanel>
+                <!-- Who created the Companion, small at the very bottom (AppInfo.Credit). -->
+                <TextBlock x:Name="CreditText" DockPanel.Dock="Bottom" Style="{StaticResource Label}" FontSize="10.5" Opacity="0.5" TextWrapping="Wrap"
+                           Margin="8,6,0,0" Visibility="Collapsed" />
+                <TextBlock DockPanel.Dock="Bottom" Text="read only: watches, never changes" Style="{StaticResource Label}" Margin="8,0,0,0" TextWrapping="Wrap" />
+                <!-- Switch to the slim always-on-top strip (for the edge of a second monitor) -->
+                <Button x:Name="StripKey" DockPanel.Dock="Bottom" Style="{StaticResource NavButton}" Click="StripKey_Click" Margin="0,0,0,10"
+                        ToolTip="Shrink to a slim strip that stays on top, out of the way. It widens with an explanation if SOLIDWORKS slows down.">
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE73F;" Style="{StaticResource NavIcon}" /><TextBlock Text="Slim strip" /></StackPanel>
+                </Button>
+                <!-- Pages: one topic at a time -->
+                <StackPanel x:Name="Nav" DockPanel.Dock="Top">
+                    <Button x:Name="NavPerformance" Style="{StaticResource NavButton}" Tag="on" Click="Nav_Click" CommandParameter="performance">
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE916;" Style="{StaticResource NavIcon}" /><TextBlock Text="Performance" /></StackPanel>
+                    </Button>
+                    <Button x:Name="NavFixes" Style="{StaticResource NavButton}" Click="Nav_Click" CommandParameter="fixes">
+                        <DockPanel>
+                            <Border x:Name="NavFixesBadge" DockPanel.Dock="Right" Background="{DynamicResource Accent}" CornerRadius="9" Padding="7,0" Visibility="Collapsed">
+                                <TextBlock x:Name="NavFixesCount" Foreground="White" FontSize="12" FontWeight="SemiBold" />
+                            </Border>
+                            <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE90F;" Style="{StaticResource NavIcon}" /><TextBlock Text="Fixes" /></StackPanel>
+                        </DockPanel>
+                    </Button>
+                    <Button x:Name="NavCrashes" Style="{StaticResource NavButton}" Click="Nav_Click" CommandParameter="crashes">
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE7BA;" Style="{StaticResource NavIcon}" /><TextBlock Text="Crashes" /></StackPanel>
+                    </Button>
+                    <Button x:Name="NavDetails" Style="{StaticResource NavButton}" Click="Nav_Click" CommandParameter="details">
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8FD;" Style="{StaticResource NavIcon}" /><TextBlock Text="Details" /></StackPanel>
+                    </Button>
+                    <Button x:Name="NavSettings" Style="{StaticResource NavButton}" Click="Nav_Click" CommandParameter="settings">
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE713;" Style="{StaticResource NavIcon}" /><TextBlock Text="Settings" /></StackPanel>
+                    </Button>
+                </StackPanel>
+                <!-- The basics, live: the last minute of each as a small chart. Orange: whole PC. Blue: SOLIDWORKS. -->
+                <ScrollViewer x:Name="SideVitalsScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,18,0,10">
+                    <StackPanel x:Name="SideVitals" Margin="8,0,2,0">
+                        <DockPanel Margin="0,0,0,8">
+                            <TextBlock Text="last minute" Style="{StaticResource Label}" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Rectangle Width="10" Height="3" Fill="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,4,0" />
+                                <TextBlock Text="PC" Style="{StaticResource Label}" Margin="0,0,8,0" />
+                                <Rectangle Width="10" Height="3" Fill="{DynamicResource Info}" VerticalAlignment="Center" Margin="0,0,4,0" />
+                                <TextBlock Text="SW" Style="{StaticResource Label}" ToolTip="SOLIDWORKS" />
+                            </StackPanel>
+                        </DockPanel>
+                        <DockPanel ToolTip="The processor (CPU) is the part of the computer that does the calculating: rebuilds, opens, drawing views. Orange: the whole PC. Blue: SOLIDWORKS. As a share of the whole processor, over the last minute."><TextBlock x:Name="SideCpu" DockPanel.Dock="Right" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Processor" FontSize="12.5" /></DockPanel>
+                        <ContentControl x:Name="SideCpuChart" Height="30" Margin="0,3,0,2" />
+                        <TextBlock x:Name="SideCpuSub" Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" Margin="0,0,0,10" />
+
+                        <DockPanel ToolTip="A processor is made of several cores, each working on one job at a time. Each bar is one core, right now. SOLIDWORKS does most modelling work on one core, so one tall bar with the rest low is normal during a rebuild, and it can be flat out even when the processor overall looks quiet."><TextBlock x:Name="SideCores" DockPanel.Dock="Right" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Cores" FontSize="12.5" /></DockPanel>
+                        <ContentControl x:Name="SideCoresChart" Height="24" Margin="0,3,0,10" />
+
+                        <DockPanel ToolTip="Memory (RAM) is the computer's fast working space: everything you have open sits in it. When it fills up, the computer slows down. Orange: in use on the whole PC. Blue: SOLIDWORKS. The top of the chart is all the memory in this PC."><TextBlock x:Name="SideMem" DockPanel.Dock="Right" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Memory" FontSize="12.5" /></DockPanel>
+                        <ContentControl x:Name="SideMemChart" Height="30" Margin="0,3,0,2" />
+                        <TextBlock x:Name="SideMemSub" Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" Margin="0,0,0,10" />
+
+                        <DockPanel ToolTip="The graphics card (GPU) draws the picture on screen; SOLIDWORKS uses it to show and spin models. Orange: how busy it is. Blue: how much of that is SOLIDWORKS. Below: its own memory in use."><TextBlock x:Name="SideGpu" DockPanel.Dock="Right" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Graphics" FontSize="12.5" /></DockPanel>
+                        <ContentControl x:Name="SideGpuChart" Height="30" Margin="0,3,0,2" />
+                        <TextBlock x:Name="SideGpuSub" Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" Margin="0,0,0,10" />
+
+                        <DockPanel ToolTip="The disk (like C:) is where files are stored. This is what SOLIDWORKS is reading and writing on it, for example while opening or saving. The chart's top is the busiest second in the last minute."><TextBlock x:Name="SideDisk" DockPanel.Dock="Right" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Disk (SW)" FontSize="12.5" /></DockPanel>
+                        <ContentControl x:Name="SideDiskChart" Height="30" Margin="0,3,0,10" />
+
+                        <DockPanel ToolTip="The network is the connection to other computers, such as file servers and the PDM vault. This is everything going in and out on the whole PC. The chart's top is the busiest second in the last minute."><TextBlock x:Name="SideNet" DockPanel.Dock="Right" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Network" FontSize="12.5" /></DockPanel>
+                        <ContentControl x:Name="SideNetChart" Height="30" Margin="0,3,0,2" />
+                        <TextBlock x:Name="SideNetSub" Style="{StaticResource Label}" TextTrimming="CharacterEllipsis" Margin="0,0,0,4" />
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- ===== Content: what's happening (always), then the page you picked ===== -->
+        <Grid Grid.Column="1" Margin="28,20,22,14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Margin="0,0,0,14">
+<Border x:Name="NowPanel" Margin="24,0,16,0" BorderThickness="0" Background="Transparent" VerticalAlignment="Center">
+                <DockPanel>
+                    <Border x:Name="NowStrip" Width="11" Height="11" CornerRadius="6" Background="{StaticResource Dim}"
+                            VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <StackPanel x:Name="NowHeader" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <TextBlock x:Name="NowChevron" Visibility="Collapsed" />
+                        <!-- Things that came and went: click to jump to the list -->
+                        <Border x:Name="CaughtBadge" Style="{StaticResource Tag}" Background="{StaticResource Warn}" Margin="0,0,10,0"
+                                Cursor="Hand" Visibility="Collapsed" VerticalAlignment="Center" ToolTip="Show what was caught (section 00)">
+                            <TextBlock x:Name="CaughtBadgeText" FontFamily="{StaticResource MonoFont}" FontSize="11" FontWeight="Bold"
+                                       Foreground="{StaticResource TagText}" />
+                        </Border>
+                        <TextBlock x:Name="NowClock" Style="{StaticResource Label}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ScrollViewer x:Name="NowScroll" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
+                            <TextBlock x:Name="NowHeadline" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Visibility="Collapsed"
+                                       Text="Looking for SOLIDWORKS..." />
+                            <TextBlock x:Name="NowSubline" FontSize="12.5" Foreground="{StaticResource Muted}" TextTrimming="CharacterEllipsis" />
+                            <!-- The causes feed the log and the issues list; kept here hidden for the code that fills them. -->
+                            <ItemsControl x:Name="NowCauses" Visibility="Collapsed">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Title}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+            </Grid>
+
+            <Grid Grid.Row="1">
+            <!-- Performance (live): the answer, four numbers, where it's held up, the last few minutes, the log -->
+            <ScrollViewer x:Name="PagePerformance" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="0,0,6,0">
+<Border x:Name="FreezeBox" Style="{StaticResource ModulePanel}" Margin="0,0,0,12" Padding="16,12" Visibility="Collapsed">
+            <StackPanel>
+                <!-- Big slowdown alert: only for obvious, large problems -->
+                <Border x:Name="AlertBanner" Background="{StaticResource Alarm}" CornerRadius="6" Padding="14,10" Margin="0,0,0,8"
+                        Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="BIG SLOWDOWN" FontFamily="{StaticResource MonoFont}" FontSize="11" FontWeight="Bold"
+                                   Foreground="White" Opacity="0.85" />
+                        <TextBlock x:Name="AlertTitle" FontSize="17" FontWeight="SemiBold" Foreground="White" TextWrapping="Wrap" />
+                        <TextBlock x:Name="AlertFix" FontSize="13.5" Foreground="White" TextWrapping="Wrap" Margin="0,4,0,0" />
+                        <TextBlock x:Name="AlertMore" FontSize="12" Foreground="White" Opacity="0.85" TextWrapping="Wrap" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+                <!-- During a freeze: is it still working, or has it stopped? -->
+                <Border x:Name="VerdictBox" Padding="0" Margin="0" Visibility="Collapsed">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Border x:Name="VerdictBadge" Style="{StaticResource Tag}" Background="{StaticResource Ok}" Margin="0,0,10,0">
+                                <TextBlock x:Name="VerdictBadgeText" FontFamily="{StaticResource MonoFont}" FontSize="11" FontWeight="Bold"
+                                           Foreground="White" />
+                            </Border>
+                            <TextBlock x:Name="VerdictTitle" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <TextBlock x:Name="VerdictClock" Style="{StaticResource Label}" Margin="0,4,0,0" />
+                        <TextBlock x:Name="VerdictEvidence" FontSize="13" LineHeight="19" TextWrapping="Wrap" Margin="0,4,0,0" />
+                        <Border x:Name="VerdictAdviceBox" Style="{StaticResource AnswerPanel}" Margin="0,8,0,0" Visibility="Collapsed">
+                            <TextBlock x:Name="VerdictAdvice" FontSize="13" LineHeight="19" TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                </Border>
+                <TextBlock x:Name="NowTimeline" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="Collapsed" />
+                <TextBlock x:Name="NowLastFreeze" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="Collapsed" />
+            </StackPanel>
+        </Border>
+            <!-- One compact strip: the guide's latest word, your replies and questions, where it's held up, and the last slow wait.
+                 Kept small so "what's happening" and "hung up" below get most of the window. -->
+            <Border x:Name="TopStrip" Style="{StaticResource ModulePanel}" Padding="18,12" Margin="0,0,0,12">
+                <StackPanel>
+                    <DockPanel>
+                        <Border x:Name="GuideBadge" Width="30" Height="30" CornerRadius="15" Background="{StaticResource Ok}"
+                                DockPanel.Dock="Left" VerticalAlignment="Top" Margin="0,2,12,0">
+                            <TextBlock x:Name="GuideBadgeText" Text="&#x2713;" Foreground="White" FontSize="15" FontWeight="Bold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock x:Name="ChatToggle" DockPanel.Dock="Right" Foreground="{StaticResource Accent}" Cursor="Hand" FontSize="12.5"
+                                   VerticalAlignment="Top" Margin="12,6,0,0" Text="conversation ›" MouseLeftButtonUp="ChatToggle_Click"
+                                   ToolTip="Show or hide the earlier messages" />
+                        <!-- Latest message only, unless you open the conversation -->
+                        <ScrollViewer x:Name="ChatScroll" MaxHeight="96" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl x:Name="ChatRows" Margin="0,0,8,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border HorizontalAlignment="{Binding Align}" Background="{Binding Fill}" CornerRadius="12" Padding="12,7"
+                                                Margin="0,0,0,6" MaxWidth="900">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" FontSize="{Binding TitleSize}" FontWeight="SemiBold" TextWrapping="Wrap"
+                                                           Foreground="{Binding Ink}" Visibility="{Binding TitleVisibility}" />
+                                                <TextBlock Text="{Binding Text}" FontSize="13.5" LineHeight="19" TextWrapping="Wrap" Foreground="{Binding SubInk}"
+                                                           Margin="{Binding TextMargin}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+
+                    <!-- Replies and your own question, on one line -->
+                    <DockPanel Margin="42,4,0,0">
+                        <ItemsControl x:Name="ChatReplies" DockPanel.Dock="Left" VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding Label}" Tag="{Binding Primary}" Style="{StaticResource ReplyChip}" Click="ChatReply_Click"
+                                            Padding="12,4" FontSize="13" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <!-- Ask your own AI (set up in Settings). The answer appears above. -->
+                        <DockPanel x:Name="AskRow" Margin="6,0,0,0" Visibility="Collapsed" VerticalAlignment="Center">
+                            <Button x:Name="AskKey" DockPanel.Dock="Right" Content="Ask" Style="{StaticResource PrimaryButton}" Margin="8,0,0,0" Padding="16,5" Click="Ask_Click" />
+                            <TextBlock DockPanel.Dock="Right" Text="what's sent?" Foreground="{StaticResource Accent}" Cursor="Hand" VerticalAlignment="Center"
+                                       FontSize="12" Margin="8,0,0,0" MouseLeftButtonUp="AskWhatSent_Click" ToolTip="See exactly what would go to the AI, with names hidden" />
+                            <Grid>
+                                <TextBox x:Name="AskBox" FontSize="13.5" Padding="8,5" VerticalContentAlignment="Center" KeyDown="AskBox_KeyDown"
+                                         TextChanged="AskBox_TextChanged" />
+                                <TextBlock x:Name="AskHint" IsHitTestVisible="False" Foreground="{StaticResource Dim}" FontSize="13.5" Margin="11,0,0,0"
+                                           VerticalAlignment="Center" Text="Ask your AI about what SOLIDWORKS is doing..." />
+                            </Grid>
+                        </DockPanel>
+                        <TextBlock x:Name="AskSetup" Margin="10,0,0,0" Foreground="{StaticResource Accent}" Cursor="Hand" FontSize="12.5" VerticalAlignment="Center"
+                                   HorizontalAlignment="Right" Text="Ask your own AI: set it up in Settings ›" MouseLeftButtonUp="AskSetup_Click" />
+                    </DockPanel>
+
+                    <!-- Where it's held up (small pills) and the last slow wait, on one line -->
+                    <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,10,0,0">
+                        <DockPanel>
+                            <TextBlock Text="held up at" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <!-- Where the time went: one line, only after something slow -->
+                            <StackPanel x:Name="BreakdownPanel" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0"
+                                        Visibility="Collapsed" Cursor="Hand" MouseLeftButtonUp="Breakdown_Click" ToolTip="Click for how the wait splits into its causes">
+                                <TextBlock x:Name="BreakdownTitle" FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" MaxWidth="360"
+                                           TextTrimming="CharacterEllipsis" Text="Nothing slow yet." />
+                                <Grid x:Name="BreakdownBar" Width="160" Height="10" Margin="10,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <ItemsControl x:Name="PipelineStages" VerticalAlignment="Center">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                                            <TextBlock Text="&#x203A;" FontSize="14" Foreground="{StaticResource Dim}" VerticalAlignment="Center"
+                                                       Margin="2,0,4,0" Visibility="{Binding ArrowVisibility}" />
+                                            <Border CornerRadius="11" BorderThickness="{Binding EdgeThickness}" BorderBrush="{Binding Edge}" Background="{Binding Fill}"
+                                                    Padding="9,3" ToolTip="{Binding Tip}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12" />
+                                                    <TextBlock Text="{Binding Detail}" FontSize="12" Foreground="{StaticResource Muted}" Margin="6,0,0,0" MaxWidth="170"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding Flag}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource Alarm}" Margin="6,0,0,0"
+                                                               Visibility="{Binding FlagVisibility}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DockPanel>
+                    </Border>
+                    <!-- Where the time went, in full: opened by clicking the line above -->
+                    <StackPanel x:Name="BreakdownDetail" Visibility="Collapsed" Margin="0,10,0,0">
+                        <ItemsControl x:Name="BreakdownRows">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0,0,0,4">
+                                        <Border Width="10" Height="10" CornerRadius="3" Background="{Binding Swatch}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                        <TextBlock Text="{Binding Seconds}" FontWeight="SemiBold" FontSize="12.5" Width="44" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding What}" FontSize="12.5" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="BreakdownNote" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,2,0,0"
+                                   Text="How the last freeze or slow open, save or sheet switch splits into its causes (from once-a-second readings)." />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+                    <!-- The running log, and beside it the "hung up" panel that things slide into from the log. -->
+                    <Grid x:Name="LogAndHangs" Height="460" Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.35*" />
+                            <ColumnDefinition Width="14" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <!-- Second row used only on narrow windows, where the panel moves under the log. -->
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+<Border x:Name="StoryPanel" Style="{StaticResource ModulePanel}" Margin="0" Padding="16,12,8,12">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,8,8">
+                        <TextBlock Text="what's happening" Style="{StaticResource SectionName}" />
+                    </DockPanel>
+                    <ScrollViewer x:Name="StoryScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
+                        <TextBlock x:Name="StoryEmpty" TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource Muted}" Margin="0,0,8,0"
+                                   Text="Work in SOLIDWORKS as usual. Anything worth knowing shows up here in plain words, as it happens." />
+                        <ItemsControl x:Name="StoryRows" Margin="0,0,8,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Tint}" CornerRadius="6" Padding="4,2,4,2" Margin="-4,0,0,5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="66" />
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Clock}" Style="{StaticResource Label}" Margin="0,2,0,0" />
+                                        <Ellipse Grid.Column="1" Width="7" Height="7" Fill="{Binding Dot}" VerticalAlignment="Top" Margin="0,6,0,0" HorizontalAlignment="Left" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Text}" FontSize="14" LineHeight="20" TextWrapping="Wrap" FontWeight="{Binding Weight}" />
+                                    </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+<!-- The "hung up" panel: anything that held SOLIDWORKS up slides in here from the log; click one for the plain-English story. -->
+<Border x:Name="CaughtSection" Grid.Column="2" Style="{StaticResource ModulePanel}" Margin="0" Padding="14,12,6,12">
+    <Grid>
+        <DockPanel x:Name="HangList">
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,8,8">
+                <Button x:Name="CaughtSeenKey" Content="mark all seen" Style="{StaticResource KeyButton}" DockPanel.Dock="Right" Padding="8,2"
+                        Click="CaughtSeenKey_Click" />
+                <TextBlock Text="hung up" Style="{StaticResource SectionName}" VerticalAlignment="Center" />
+                <TextBlock x:Name="CaughtSummary" Style="{StaticResource Label}" Margin="10,0,0,0" VerticalAlignment="Center" Text="nothing yet" />
+            </DockPanel>
+            <TextBlock x:Name="CaughtExplain" DockPanel.Dock="Bottom" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,8,8,0"
+                       Text="Anything that held SOLIDWORKS up, and anything Windows recorded that could, slides in here from the log. Click one to see what happened and what to do. Saved in the logs folder." />
+            <ScrollViewer x:Name="CaughtScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl x:Name="CaughtRows">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource Bg}" BorderBrush="{Binding Edge}" BorderThickness="3,0,0,0" CornerRadius="8"
+                                    Padding="10,8" Margin="0,0,8,6" Cursor="Hand" MouseLeftButtonUp="CaughtRow_Click" ToolTip="What happened, and what to do">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <DockPanel Margin="0,4,0,0">
+                                        <TextBlock Text="explain ›" DockPanel.Dock="Right" FontSize="12" Foreground="{StaticResource Accent}" VerticalAlignment="Center" />
+                                        <Border Style="{StaticResource Tag}" Background="{StaticResource Warn}" Visibility="{Binding TagVisibility}" Margin="0,0,8,0">
+                                            <TextBlock Text="look into this" FontFamily="{StaticResource MonoFont}" FontSize="10.5" Foreground="{StaticResource TagText}" />
+                                        </Border>
+                                        <TextBlock Text="{Binding When}" Style="{StaticResource Label}" VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </DockPanel>
+
+        <!-- One hang-up, explained -->
+        <DockPanel x:Name="HangDetail" Visibility="Collapsed" Background="{StaticResource Module}">
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,8,8">
+                <Button Content="‹ back" Style="{StaticResource KeyButton}" Padding="8,2" Click="HangBack_Click" />
+                <TextBlock x:Name="HangWhen" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="10,0,0,0" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+            <ScrollViewer x:Name="HangDetailScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="0,0,8,0">
+                    <TextBlock x:Name="HangTitle" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,10" />
+                    <TextBlock Text="What happened" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource Accent}" />
+                    <TextBlock x:Name="HangWhat" FontSize="13.5" LineHeight="19" TextWrapping="Wrap" Margin="0,2,0,10" />
+                    <TextBlock Text="Why it matters" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource Accent}" />
+                    <TextBlock x:Name="HangWhy" FontSize="13.5" LineHeight="19" TextWrapping="Wrap" Margin="0,2,0,10" />
+                    <StackPanel x:Name="HangSawBox">
+                        <TextBlock Text="Windows recorded at the same time" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource Accent}" />
+                        <ItemsControl x:Name="HangSaw" Margin="0,2,0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" FontSize="13" LineHeight="18" TextWrapping="Wrap" Margin="0,0,0,3" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                    <TextBlock Text="What to try" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource Accent}" />
+                    <ItemsControl x:Name="HangTry" Margin="0,2,0,10">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,0,0,5">
+                                    <TextBlock Text="{Binding Number}" FontWeight="SemiBold" FontSize="13" Width="20" />
+                                    <TextBlock Text="{Binding Text}" FontSize="13.5" LineHeight="19" TextWrapping="Wrap" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <!-- Words used here: plain explanations of the computer words above -->
+                    <StackPanel x:Name="HangWordsBox">
+                        <TextBlock Text="Words used here" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource Accent}" />
+                        <ItemsControl x:Name="HangWords" Margin="0,4,0,10">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock TextWrapping="Wrap" FontSize="13" LineHeight="18" Margin="0,0,0,6">
+                                        <Run Text="{Binding Word, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=": " /><Run Text="{Binding Plain, Mode=OneWay}" Foreground="{StaticResource Muted}" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                    <TextBlock Text="Look into it further" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource Accent}" />
+                    <ItemsControl x:Name="HangLook" Margin="0,2,0,6">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,0,0,5">
+                                    <TextBlock Text="•" FontSize="13" Width="14" />
+                                    <TextBlock Text="{Binding}" FontSize="13" LineHeight="18" TextWrapping="Wrap" Foreground="{StaticResource Muted}" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <!-- Ask your own AI about this item (only when Ask AI is set up) -->
+                    <Button x:Name="HangAskKey" Content="Ask AI about this" Style="{StaticResource KeyButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
+                            Click="HangAsk_Click" Visibility="Collapsed" />
+                    <Border x:Name="HangAiBox" Visibility="Collapsed" Background="{StaticResource Bg}" CornerRadius="8" Padding="12,10" Margin="0,8,0,0">
+                        <StackPanel>
+                            <TextBlock x:Name="HangAiFrom" Style="{StaticResource Label}" Margin="0,0,0,4" />
+                            <TextBox x:Name="HangAiText" IsReadOnly="True" BorderThickness="0" Background="Transparent" TextWrapping="Wrap" FontSize="13.5" />
+                        </StackPanel>
+                    </Border>
+                    <!-- Still unclear? Two more levels, one click each. -->
+                    <Button x:Name="HangMoreKey" Content="Explain more" Style="{StaticResource KeyButton}" HorizontalAlignment="Left" Margin="0,8,0,8"
+                            Click="HangMore_Click" />
+                    <StackPanel x:Name="HangMoreBox" Visibility="Collapsed">
+                        <TextBlock Text="In more detail" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource Accent}" Margin="0,4,0,0" />
+                        <ItemsControl x:Name="HangMore" Margin="0,2,0,6">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" FontSize="13.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,8" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button x:Name="HangTechKey" Content="Still unclear? Show what was recorded" Style="{StaticResource KeyButton}" HorizontalAlignment="Left"
+                                Margin="0,0,0,8" Click="HangTech_Click" />
+                    </StackPanel>
+                    <Border x:Name="HangTechBox" Visibility="Collapsed" Background="{StaticResource Bg}" CornerRadius="8" Padding="10,8" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="What the Companion recorded (useful for whoever helps you look into it)" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                            <ItemsControl x:Name="HangTech">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" FontFamily="{StaticResource MonoFont}" FontSize="11.5" TextWrapping="Wrap" Margin="0,0,0,4" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Grid>
+</Border>
+                        <!-- A copy of the log line flies across this layer into the panel. -->
+                        <Canvas x:Name="SlideLayer" Grid.ColumnSpan="3" Grid.RowSpan="2" IsHitTestVisible="False" />
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Fixes: the walkthrough and the full list -->
+            <ScrollViewer x:Name="PageFixes" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="0,0,6,0">
+<Border x:Name="FixWizard" Style="{StaticResource ModulePanel}" Padding="26,22" Margin="0,0,0,14" Visibility="Collapsed">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,8">
+                        <Button Content="close" Style="{StaticResource KeyButton}" DockPanel.Dock="Right" Click="FixClose_Click" Padding="10,3" />
+                        <TextBlock x:Name="FixCounter" Style="{StaticResource Label}" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <TextBlock x:Name="FixTitle" FontSize="21" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <TextBlock x:Name="FixGain" FontSize="14.5" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,14" />
+                    <ItemsControl x:Name="FixSteps">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,0,0,10">
+                                    <Border Width="26" Height="26" CornerRadius="13" Background="{StaticResource Accent}" VerticalAlignment="Top" Margin="0,0,12,0">
+                                        <TextBlock Text="{Binding Number}" Foreground="White" FontWeight="Bold" FontSize="13"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Text="{Binding Text}" FontSize="14.5" LineHeight="21" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border x:Name="FixResultBox" CornerRadius="10" Padding="14,10" Margin="0,6,0,4" Visibility="Collapsed">
+                        <TextBlock x:Name="FixResult" FontSize="14.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    </Border>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button x:Name="FixCheck" Style="{StaticResource PrimaryButton}" Click="FixCheck_Click" Margin="0,0,12,0" />
+                        <Button x:Name="FixBack" Content="back" Style="{StaticResource KeyButton}" Click="FixBack_Click" Margin="0,0,8,0" />
+                        <Button x:Name="FixNext" Content="next fix" Style="{StaticResource KeyButton}" Click="FixNext_Click" />
+                        <Button x:Name="FixDismiss" Content="dismiss this fix" Style="{StaticResource KeyButton}" Click="FixDismiss_Click" Margin="16,0,8,8"
+                                ToolTip="Not relevant to you? Dismiss it: it stops counting and stops being suggested. You can bring it back from the list below." />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+<Border x:Name="IssuePanel" Style="{StaticResource ModulePanel}" Margin="0" Padding="16,12,8,12">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,8,8">
+                        <TextBlock Text="worth fixing" Style="{StaticResource SectionName}" />
+                        <TextBlock x:Name="IssueCount" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                    </DockPanel>
+                    <ScrollViewer x:Name="IssueScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="0,0,8,0">
+                            <TextBlock x:Name="NoIssues" Text="Nothing to fix right now. If something is slowing SOLIDWORKS down, it shows up here with what to try."
+                                       TextWrapping="Wrap" FontSize="13.5" Foreground="{StaticResource Muted}" />
+                            <!-- One line each; click a line to see why it matters and what to try -->
+                            <ItemsControl x:Name="IssueRows">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,8,0,8" Background="Transparent"
+                                                Cursor="Hand" MouseLeftButtonUp="IssueRow_Click" ToolTip="Click for why it matters and what to try">
+                                            <StackPanel>
+                                                <DockPanel>
+                                                    <TextBlock DockPanel.Dock="Right" Text="{Binding Chevron}" Foreground="{StaticResource Muted}" Margin="8,0,0,0" />
+                                                    <Ellipse Width="8" Height="8" Fill="{Binding TitleBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                </DockPanel>
+                                                <StackPanel Visibility="{Binding DetailVisibility}" Margin="16,4,0,0">
+                                                    <TextBlock Text="{Binding Why}" FontSize="13" LineHeight="19" TextWrapping="Wrap" />
+                                                    <TextBlock Text="{Binding Try}" FontSize="13" LineHeight="19" TextWrapping="Wrap" FontStyle="Italic"
+                                                               Foreground="{StaticResource Muted}" Visibility="{Binding TryVisibility}" Margin="0,4,0,0" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="IssueMore" Foreground="{StaticResource Accent}" FontSize="13" Margin="0,8,0,0" Cursor="Hand"
+                                       MouseLeftButtonUp="IssueMore_Click" Visibility="Collapsed" />
+                            <TextBlock x:Name="DismissedLink" Foreground="{StaticResource Muted}" FontSize="13" Margin="0,8,0,0" Cursor="Hand"
+                                       MouseLeftButtonUp="DismissedLink_Click" Visibility="Collapsed" ToolTip="Bring the dismissed fixes back" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Crashes: for looking into later -->
+            <ScrollViewer x:Name="PageCrashes" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="0,0,6,0">
+<Border x:Name="CrashSection" Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock Text="11" Style="{StaticResource SectionNumber}" />
+                    <TextBlock Text="crashes" Style="{StaticResource SectionName}" />
+                    <TextBlock x:Name="CrashSummary" FontSize="14" Margin="14,0,0,0" VerticalAlignment="Center" Text="reading..." />
+                    <TextBlock Text="from SOLIDWORKS's records" Style="{StaticResource Label}" HorizontalAlignment="Right" Margin="12,0,0,0" />
+                </DockPanel>
+                <Border x:Name="CrashPatternBox" Style="{StaticResource AnswerPanel}" Margin="0,0,0,10" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock x:Name="CrashPatternTitle" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock x:Name="CrashPatternWhy" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,0" />
+                        <TextBlock x:Name="CrashPatternTry" FontSize="13" FontStyle="Italic" TextWrapping="Wrap" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Border>
+                <ItemsControl x:Name="CrashRows">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="2,7,2,7">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Line}" FontSize="13.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Detail}" FontSize="12.5" Foreground="{StaticResource Muted}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock TextWrapping="Wrap" FontSize="12.5" LineHeight="18" Foreground="{StaticResource Muted}" Margin="2,8,0,6"
+                           Text="SOLIDWORKS keeps a record of each crash in your roaming SOLIDWORKS folder. The Companion only reads them; it never opens the crash dumps (they can hold model data). When SOLIDWORKS crashes or is ended while frozen, the Companion also saves its own report with what it saw just before." />
+                <WrapPanel>
+                    <Button Content="open the reports folder" Style="{StaticResource KeyButton}" Click="OpenReports_Click" />
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Details: every number and check, for when you want them -->
+            <ScrollViewer x:Name="PageDetails" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="0,0,6,0">
+                    <Grid Height="360" Margin="0,0,0,14">
+<Border x:Name="VitalsPanel" Style="{StaticResource ScreenPanel}" Margin="0" Padding="16,12,12,12">
+                <ScrollViewer x:Name="VitalsScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="0,0,4,0">
+                        <DockPanel Margin="0,0,0,6">
+                            <TextBlock Text="vitals" Style="{StaticResource ScreenLabel}" FontWeight="Bold" />
+                            <TextBlock Text="every second" Style="{StaticResource ScreenLabel}" HorizontalAlignment="Right" />
+                        </DockPanel>
+                        <TextBlock x:Name="VitalsHeadline" FontSize="15" Foreground="{StaticResource ScreenText}" TextWrapping="Wrap" Margin="0,0,0,10"
+                                   Text="measuring..." />
+                        <!-- one thin bar per processor core -->
+                        <ItemsControl x:Name="VitalCores" Margin="0,0,0,12">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Width="13" ToolTip="{Binding Tip}" Background="Transparent">
+                                        <Grid Height="40" Width="5" HorizontalAlignment="Center">
+                                            <Rectangle Fill="{StaticResource ScreenDim}" Width="2" HorizontalAlignment="Center" />
+                                            <Rectangle VerticalAlignment="Bottom" Height="{Binding SmallHeight}" Fill="{Binding Fill}" RadiusX="1" RadiusY="1" />
+                                        </Grid>
+                                        <TextBlock Text="{Binding TypeLetter}" Style="{StaticResource ScreenLabel}" FontSize="8" HorizontalAlignment="Center" Opacity="0.7" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <ItemsControl x:Name="VitalMeters">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,9" ToolTip="{Binding Tip}" Background="Transparent">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="104" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" MinWidth="96" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource ScreenLabel}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                        <Grid Grid.Column="1" Height="7" VerticalAlignment="Center">
+                                            <Rectangle Fill="{StaticResource ScreenDim}" RadiusX="1" RadiusY="1" />
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="{Binding First}" />
+                                                    <ColumnDefinition Width="{Binding Second}" />
+                                                    <ColumnDefinition Width="{Binding Rest}" />
+                                                </Grid.ColumnDefinitions>
+                                                <Rectangle Grid.Column="0" Fill="{Binding FirstFill}" />
+                                                <Rectangle Grid.Column="1" Fill="{Binding SecondFill}" />
+                                            </Grid>
+                                        </Grid>
+                                        <TextBlock Grid.Column="2" Text="{Binding Value}" Foreground="{Binding ValueBrush}" FontFamily="{StaticResource MonoFont}"
+                                                   FontSize="11.5" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8,0,0,0" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Style="{StaticResource ScreenLabel}" TextWrapping="Wrap" Margin="0,4,0,0" Opacity="0.8"
+                                   Text="Orange is SOLIDWORKS's share. Hover over a bar for what it means; advanced has the full detail." />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+                    </Grid>
+                    <ContentControl x:Name="DetailTilesHost" />
+<StackPanel x:Name="Sections" Margin="0,0,6,0">
+        
+
+        <!-- ===== 01 checkup: the first things to look at for performance ===== -->
+        <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock Text="01" Style="{StaticResource SectionNumber}" />
+                    <TextBlock Text="checkup" Style="{StaticResource SectionName}" />
+                    <TextBlock x:Name="CheckupSummaryText" FontSize="14" Margin="14,0,0,0" VerticalAlignment="Center" Text="checking..." />
+                    <TextBlock Text="every 10 s   report only: nothing is changed" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                </DockPanel>
+                <ItemsControl x:Name="CheckRows">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0" Padding="2,9,2,9">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding GroupHeader}" Visibility="{Binding GroupHeaderVisibility}"
+                                               Style="{StaticResource SectionNumber}" Margin="0,6,0,8" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="22" />
+                                            <ColumnDefinition Width="230" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Width="10" Height="10" Fill="{Binding Dot}" VerticalAlignment="Top" Margin="0,5,0,0"
+                                                 HorizontalAlignment="Left" ToolTip="{Binding StatusWords}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Title}" Style="{StaticResource SectionName}" Margin="0,2,12,0" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Finding}" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
+                                        <Button Grid.Column="3" Content="{Binding KeyLabel}" Style="{StaticResource KeyButton}" Margin="12,0,0,0"
+                                                Tag="{Binding KeyTag}" CommandParameter="{Binding Id}" Click="CheckFixKey_Click"
+                                                Visibility="{Binding FixKeyVisibility}" VerticalAlignment="Top" />
+                                    </Grid>
+                                    <Border Style="{StaticResource AnswerPanel}" Margin="22,10,0,0" Visibility="{Binding FixVisibility}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Plain}" TextWrapping="Wrap" FontSize="13" LineHeight="19" FontStyle="Italic" />
+                                            <TextBlock Text="how to fix" Style="{StaticResource SectionName}" Margin="0,10,0,4"
+                                                       Visibility="{Binding HowToFixVisibility}" />
+                                            <TextBlock Text="{Binding HowToFix}" TextWrapping="Wrap" FontSize="13" LineHeight="19"
+                                                       Visibility="{Binding HowToFixVisibility}" />
+                                            <TextBlock Text="{Binding Source}" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,8,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== 02 cpu ===== -->
+        <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock Text="02" Style="{StaticResource SectionNumber}" />
+                    <TextBlock Text="cpu" Style="{StaticResource SectionName}" />
+                    <TextBlock Text="sentence: last 3 s   numbers: every 1 s" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                </DockPanel>
+                <Border Style="{StaticResource ScreenPanel}">
+                    <StackPanel>
+                        <TextBlock x:Name="CpuSummaryText" TextWrapping="Wrap" FontSize="15"
+                                   Foreground="{StaticResource ScreenText}" Text="measuring..." />
+                        <TextBlock x:Name="CpuDetailText" Style="{StaticResource ScreenLabel}" Margin="0,6,0,14" TextWrapping="Wrap" />
+                        <ItemsControl x:Name="CoreBars">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="{Binding Spacing}" Width="16" ToolTip="{Binding Tip}" Background="Transparent">
+                                        <!-- thin line graphic: dim track, coloured level -->
+                                        <Grid Height="52" Width="6" HorizontalAlignment="Center">
+                                            <Rectangle Fill="{StaticResource ScreenDim}" Width="2" HorizontalAlignment="Center" />
+                                            <Rectangle VerticalAlignment="Bottom" Height="{Binding BarHeight}" Fill="{Binding Fill}" RadiusX="1" RadiusY="1" />
+                                        </Grid>
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource ScreenLabel}" FontSize="9"
+                                                   HorizontalAlignment="Center" Margin="0,4,0,0" />
+                                        <TextBlock Text="{Binding TypeLetter}" Style="{StaticResource ScreenLabel}" FontSize="8"
+                                                   HorizontalAlignment="Center" Opacity="0.7" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- what this means, in everyday words -->
+                <TextBlock Text="what this means" Style="{StaticResource Label}" Margin="2,14,0,4" />
+                <TextBlock x:Name="ExplainText" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" Margin="2,0,0,0" />
+
+                <!-- why? questions: click one to open its answer, click again to close -->
+                <TextBlock Text="ask why" Style="{StaticResource Label}" Margin="2,14,0,6" />
+                <WrapPanel x:Name="QuestionKeys" />
+                <Border x:Name="AnswerBox" Style="{StaticResource AnswerPanel}" Margin="0,10,0,0" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock x:Name="AnswerTitle" Style="{StaticResource SectionName}" Margin="0,0,0,6" />
+                        <TextBlock x:Name="AnswerText" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== 03 memory ===== -->
+        <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock Text="03" Style="{StaticResource SectionNumber}" />
+                    <TextBlock Text="memory" Style="{StaticResource SectionName}" />
+                    <TextBlock Text="every 2 s   orange = solidworks's share" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                </DockPanel>
+                <Border Style="{StaticResource ScreenPanel}">
+                    <StackPanel>
+                        <TextBlock x:Name="MemorySummaryText" TextWrapping="Wrap" FontSize="15"
+                                   Foreground="{StaticResource ScreenText}" Text="measuring..." />
+                        <TextBlock x:Name="MemoryDetailText" Style="{StaticResource ScreenLabel}" Margin="0,6,0,12" TextWrapping="Wrap" />
+                        <ItemsControl x:Name="MemoryMeters">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,10" ToolTip="{Binding Tip}" Background="Transparent">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="220" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="170" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource ScreenLabel}" VerticalAlignment="Center" />
+                                        <!-- thin bar: orange part, plain part, empty remainder -->
+                                        <Grid Grid.Column="1" Height="8" VerticalAlignment="Center">
+                                            <Rectangle Fill="{StaticResource ScreenDim}" RadiusX="1" RadiusY="1" />
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="{Binding First}" />
+                                                    <ColumnDefinition Width="{Binding Second}" />
+                                                    <ColumnDefinition Width="{Binding Rest}" />
+                                                </Grid.ColumnDefinitions>
+                                                <Rectangle Grid.Column="0" Fill="{Binding FirstFill}" />
+                                                <Rectangle Grid.Column="1" Fill="{Binding SecondFill}" />
+                                            </Grid>
+                                        </Grid>
+                                        <TextBlock Grid.Column="2" Text="{Binding Value}" Foreground="{Binding ValueBrush}"
+                                                   FontFamily="{StaticResource MonoFont}" FontSize="12"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="what this means" Style="{StaticResource Label}" Margin="2,14,0,4" />
+                <TextBlock x:Name="MemoryExplainText" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" Margin="2,0,0,0" />
+
+                <TextBlock Text="ask why" Style="{StaticResource Label}" Margin="2,14,0,6" />
+                <WrapPanel x:Name="MemoryKeys" />
+                <Border x:Name="MemoryAnswerBox" Style="{StaticResource AnswerPanel}" Margin="0,10,0,0" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock x:Name="MemoryAnswerTitle" Style="{StaticResource SectionName}" Margin="0,0,0,6" />
+                        <TextBlock x:Name="MemoryAnswerText" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== 04 graphics ===== -->
+        <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock Text="04" Style="{StaticResource SectionNumber}" />
+                    <TextBlock Text="graphics" Style="{StaticResource SectionName}" />
+                    <TextBlock Text="every 2 s   orange = solidworks's share" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                </DockPanel>
+                <Border Style="{StaticResource ScreenPanel}">
+                    <StackPanel>
+                        <TextBlock x:Name="GpuSummaryText" TextWrapping="Wrap" FontSize="15"
+                                   Foreground="{StaticResource ScreenText}" Text="measuring..." />
+                        <TextBlock x:Name="GpuDetailText" Style="{StaticResource ScreenLabel}" Margin="0,6,0,12" TextWrapping="Wrap" />
+                        <ItemsControl x:Name="GpuMeters" ItemTemplate="{Binding ItemTemplate, ElementName=MemoryMeters}" />
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="what this means" Style="{StaticResource Label}" Margin="2,14,0,4" />
+                <TextBlock x:Name="GpuExplainText" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" Margin="2,0,0,0" />
+
+                <TextBlock Text="ask why" Style="{StaticResource Label}" Margin="2,14,0,6" />
+                <WrapPanel x:Name="GpuKeys" />
+                <Border x:Name="GpuAnswerBox" Style="{StaticResource AnswerPanel}" Margin="0,10,0,0" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock x:Name="GpuAnswerTitle" Style="{StaticResource SectionName}" Margin="0,0,0,6" />
+                        <TextBlock x:Name="GpuAnswerText" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== 05 disk and network ===== -->
+        <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock Text="05" Style="{StaticResource SectionNumber}" />
+                    <TextBlock Text="disk and network" Style="{StaticResource SectionName}" />
+                    <TextBlock Text="every 2 s" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                </DockPanel>
+                <Border Style="{StaticResource ScreenPanel}">
+                    <StackPanel>
+                        <TextBlock x:Name="IoSummaryText" TextWrapping="Wrap" FontSize="15"
+                                   Foreground="{StaticResource ScreenText}" Text="measuring..." />
+                        <TextBlock x:Name="IoDetailText" Style="{StaticResource ScreenLabel}" Margin="0,6,0,12" TextWrapping="Wrap" />
+                        <ItemsControl x:Name="IoMeters" ItemTemplate="{Binding ItemTemplate, ElementName=MemoryMeters}" />
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="what this means" Style="{StaticResource Label}" Margin="2,14,0,4" />
+                <TextBlock x:Name="IoExplainText" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" Margin="2,0,0,0" />
+
+                <TextBlock Text="ask why" Style="{StaticResource Label}" Margin="2,14,0,6" />
+                <WrapPanel x:Name="IoKeys" />
+                <Border x:Name="IoAnswerBox" Style="{StaticResource AnswerPanel}" Margin="0,10,0,0" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock x:Name="IoAnswerTitle" Style="{StaticResource SectionName}" Margin="0,0,0,6" />
+                        <TextBlock x:Name="IoAnswerText" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== 06 files (file tracing, needs administrator) ===== -->
+        <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock Text="06" Style="{StaticResource SectionNumber}" />
+                    <TextBlock Text="files" Style="{StaticResource SectionName}" />
+                    <TextBlock x:Name="FilesStatusLabel" Text="file tracing: off" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                </DockPanel>
+                <DockPanel Margin="0,0,0,10" x:Name="AdminRow">
+                    <Button x:Name="RestartAdminKey" DockPanel.Dock="Right" Content="restart as administrator" Style="{StaticResource KeyButton}"
+                            Margin="12,0,0,0" Click="RestartAdminKey_Click" VerticalAlignment="Top" />
+                    <TextBlock x:Name="AdminText" TextWrapping="Wrap" FontSize="13" LineHeight="19"
+                               Text="File tracing shows each file SOLIDWORKS opens, how long it waited, where it came from and whether Windows Defender held it up. Windows only allows this for administrators. Restarting as administrator shows a Windows permission prompt; the Companion stays read only." />
+                </DockPanel>
+                <Border Style="{StaticResource ScreenPanel}">
+                    <StackPanel>
+                        <TextBlock x:Name="FilesSummaryText" TextWrapping="Wrap" FontSize="15"
+                                   Foreground="{StaticResource ScreenText}" Text="File tracing is off." />
+                        <ItemsControl x:Name="FileRows" Margin="0,10,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,6" ToolTip="{Binding Path}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="260" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Name}" Foreground="{Binding NameBrush}" FontFamily="{StaticResource MonoFont}"
+                                                   FontSize="12" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Details}" Style="{StaticResource ScreenLabel}" TextWrapping="Wrap" Margin="10,0" />
+                                        <Border Grid.Column="2" Style="{StaticResource Tag}" Background="{StaticResource Warn}" Visibility="{Binding ScanVisibility}">
+                                            <TextBlock Text="scanned" FontFamily="{StaticResource MonoFont}" FontSize="10.5" Foreground="{StaticResource TagText}" />
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="what this means" Style="{StaticResource Label}" Margin="2,14,0,4" />
+                <TextBlock x:Name="FilesExplainText" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" Margin="2,0,0,0" />
+
+                <TextBlock Text="ask why" Style="{StaticResource Label}" Margin="2,14,0,6" />
+                <WrapPanel x:Name="FilesKeys" />
+                <Border x:Name="FilesAnswerBox" Style="{StaticResource AnswerPanel}" Margin="0,10,0,0" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock x:Name="FilesAnswerTitle" Style="{StaticResource SectionName}" Margin="0,0,0,6" />
+                        <TextBlock x:Name="FilesAnswerText" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== 07 pdm vault: servers, names, ports, the user's notes ===== -->
+        <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock Text="07" Style="{StaticResource SectionNumber}" />
+                    <TextBlock Text="pdm vault" Style="{StaticResource SectionName}" />
+                    <TextBlock Text="every 10 s   port test only when you click it" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                </DockPanel>
+                <TextBlock x:Name="VaultSummaryText" FontSize="15" TextWrapping="Wrap" Margin="2,0,0,8" Text="looking for vault views..." />
+                <ComboBox x:Name="VaultPicker" Width="260" HorizontalAlignment="Left" Margin="2,0,0,10" Visibility="Collapsed"
+                          SelectionChanged="VaultPicker_SelectionChanged" />
+
+                <!-- Live traffic map: this PC, the vault's server(s), traffic between them -->
+                <TextBlock Text="live traffic map" Style="{StaticResource Label}" Margin="2,4,0,6" />
+                <Border Background="{StaticResource Bg}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <ContentControl x:Name="MapHost" Height="200" />
+                </Border>
+                <DockPanel Margin="2,6,0,12">
+                    <Button x:Name="MapExampleKey" DockPanel.Dock="Right" Content="show an example" Style="{StaticResource KeyButton}"
+                            Margin="12,0,0,0" Click="MapExampleKey_Click" VerticalAlignment="Top" />
+                    <TextBlock x:Name="MapNote" Style="{StaticResource Label}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                </DockPanel>
+                <ItemsControl x:Name="VaultRows">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="2,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Ellipse Width="9" Height="9" Fill="{Binding Dot}" VerticalAlignment="Top" Margin="0,6,0,0" HorizontalAlignment="Left" />
+                                <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="13" LineHeight="19">
+                                    <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" />
+                                    <Run Text="  " />
+                                    <Run Text="{Binding Finding, Mode=OneWay}" />
+                                </TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <!-- Live traffic to the vault's servers (file tracing, administrator) -->
+                <Border Style="{StaticResource ScreenPanel}" Margin="0,6,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="VaultTrafficSummary" TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource ScreenText}" />
+                        <ItemsControl x:Name="VaultTrafficRows" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" Style="{StaticResource ScreenLabel}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+                <TextBlock x:Name="VaultTrafficExplain" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" Margin="2,0,0,4" />
+                <TextBlock x:Name="VaultTrafficPlain" TextWrapping="Wrap" FontSize="12.5" LineHeight="18" FontStyle="Italic" Margin="2,0,0,10"
+                           Foreground="{StaticResource Muted}" />
+                <WrapPanel Margin="0,4,0,0">
+                    <Button x:Name="PortTestKey" Content="test the server ports" Style="{StaticResource KeyButton}" Click="PortTestKey_Click" />
+                </WrapPanel>
+                <TextBlock x:Name="PortTestNote" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="2,0,0,0"
+                           Text="Only when you click: knocks on each server's port, times the answer, and closes straight away. Nothing is sent to PDM or SQL Server. Each test is logged." />
+
+                <!-- The user's notes: what the app can't detect -->
+                <TextBlock Text="your notes about this vault" Style="{StaticResource Label}" Margin="2,16,0,6" />
+                <Grid x:Name="VaultNotesForm" Margin="2,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="210" />
+                        <ColumnDefinition Width="260" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="database (SQL) server is in" VerticalAlignment="Center" FontSize="13" />
+                    <ComboBox Grid.Row="0" Grid.Column="1" x:Name="NoteDatabaseWhere" Margin="0,2" />
+                    <TextBlock Grid.Row="1" Text="archive server is in" VerticalAlignment="Center" FontSize="13" />
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="NoteArchiveWhere" Margin="0,2" />
+                    <TextBlock Grid.Row="2" Text="this PC reaches them over" VerticalAlignment="Center" FontSize="13" />
+                    <ComboBox Grid.Row="2" Grid.Column="1" x:Name="NoteLink" Margin="0,2" />
+                    <TextBlock Grid.Row="3" Text="archive replicated between sites" VerticalAlignment="Center" FontSize="13" />
+                    <ComboBox Grid.Row="3" Grid.Column="1" x:Name="NoteReplicated" Margin="0,2" />
+                    <TextBlock Grid.Row="4" Text="anything else" VerticalAlignment="Top" Margin="0,6,0,0" FontSize="13" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" x:Name="NoteText" Margin="0,2" Height="54"
+                             TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" />
+                    <StackPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button x:Name="SaveNotesKey" Content="save notes" Style="{StaticResource KeyButton}" Click="SaveNotesKey_Click" />
+                        <TextBlock x:Name="NotesStatus" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="4,0,0,8" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== 08 inside solidworks (the add-in) ===== -->
+        <Border Style="{StaticResource ModulePanel}">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,8">
+                    <TextBlock Text="08" Style="{StaticResource SectionNumber}" />
+                    <TextBlock Text="inside solidworks" Style="{StaticResource SectionName}" />
+                    <TextBlock x:Name="AddinStatusLabel" Text="add-in: not connected" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                </DockPanel>
+                <Border Style="{StaticResource ScreenPanel}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="AddinNowText" TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource ScreenText}" />
+                        <ItemsControl x:Name="AddinRecentRows" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" Style="{StaticResource ScreenLabel}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+                <!-- The last slow sheet switch: which views are most likely holding it up -->
+                <Border x:Name="AddinSheetBox" Style="{StaticResource ScreenPanel}" Margin="0,0,0,10" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock x:Name="AddinSheetHeadline" TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource ScreenText}" />
+                        <ItemsControl x:Name="AddinSuspects" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" Style="{StaticResource ScreenLabel}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="AddinSheetCaveat" Style="{StaticResource ScreenLabel}" TextWrapping="Wrap" FontStyle="Italic" Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+                <TextBlock x:Name="AddinExplainText" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" Margin="2,0,0,4" />
+                <StackPanel x:Name="TimeViewsRow" Orientation="Horizontal" Margin="0,6,0,0" Visibility="Collapsed">
+                    <Button x:Name="TimeViewsKey" Content="time each view" Style="{StaticResource KeyButton}" Click="TimeViewsKey_Click" />
+                    <TextBlock x:Name="TimeViewsNote" Style="{StaticResource Label}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="4,0,0,8" MaxWidth="640" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== 09 programs ===== -->
+        <Border Style="{StaticResource ModulePanel}">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <TextBlock Text="09" Style="{StaticResource SectionNumber}" />
+                    <TextBlock Text="programs" Style="{StaticResource SectionName}" />
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0"
+                                ToolTip="Colour key for the type column. locked = the safety rules forbid ever stopping it.">
+                        <Ellipse Width="10" Height="10" Fill="{StaticResource Accent}" Margin="0,0,4,0" /><TextBlock Text="sw" Style="{StaticResource Label}" Margin="0,0,10,0" />
+                        <Ellipse Width="10" Height="10" Fill="{StaticResource Info}" Margin="0,0,4,0" /><TextBlock Text="pdm" Style="{StaticResource Label}" Margin="0,0,10,0" />
+                        <Ellipse Width="10" Height="10" Fill="{StaticResource Warn}" Margin="0,0,4,0" /><TextBlock Text="licence" Style="{StaticResource Label}" Margin="0,0,10,0" />
+                        <Ellipse Width="10" Height="10" Fill="{StaticResource Text}" Margin="0,0,4,0" /><TextBlock Text="helper" Style="{StaticResource Label}" />
+                    </StackPanel>
+                    <TextBlock Text="every 2 s" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                </DockPanel>
+                <DataGrid x:Name="ProcessGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                          PreviewMouseWheel="ProcessGrid_PreviewMouseWheel"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          CanUserAddRows="False" SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="type" Width="130">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="9" Height="9" Fill="{Binding TypeBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding RoleText}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="program" Binding="{Binding ExeName}" Width="190">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+                                    <Setter Property="FontSize" Value="12" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="pid" Binding="{Binding Id}" Width="64">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+                                    <Setter Property="FontSize" Value="12" />
+                                    <Setter Property="Foreground" Value="{StaticResource Muted}" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTemplateColumn Header="" Width="70">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <!-- yellow printed tag, like a key cap -->
+                                    <Border Style="{StaticResource Tag}" Background="{StaticResource Warn}" Visibility="{Binding LockVisibility}">
+                                        <TextBlock Text="locked" FontFamily="{StaticResource MonoFont}" FontSize="10.5" Foreground="{StaticResource TagText}" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="what it is" Binding="{Binding Description}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                    <Setter Property="Foreground" Value="{StaticResource Text}" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+
+        </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Settings: look, and about this copy -->
+            <ScrollViewer x:Name="PageSettings" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="0,0,6,0">
+                    <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Look" Style="{StaticResource SectionName}" Margin="0,0,0,10" />
+                            <TextBlock Text="Light or dark. The Companion reopens in the new look." Style="{StaticResource Label}" Margin="0,0,0,10" />
+                            <WrapPanel>
+<Button x:Name="ThemeKey" Content="dark mode" Style="{StaticResource KeyButton}" Margin="0" Padding="10,3"
+                        VerticalAlignment="Center" Click="ThemeKey_Click" ToolTip="Switch between the light and dark look. The Companion reopens in the new look." />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                    <!-- Ask AI: optional, your own AI service and key -->
+                    <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Ask AI (optional)" Style="{StaticResource SectionName}" Margin="0,0,0,10" />
+                            <TextBlock Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,0,0,14" FontSize="12.5" LineHeight="18"
+                                       Text="Ask your own AI about what SOLIDWORKS is doing. It uses your account and your key, and the provider bills you directly (usually a few cents a question). A Claude Pro or ChatGPT Plus subscription can't be used by other apps: you need an API key from the provider's developer site. Or run a free model on this PC (for example Ollama), and nothing leaves the PC. Names of files, folders, servers, this PC and you are hidden before anything is sent. The AI can only answer; it can't change anything." />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="AI service" VerticalAlignment="Center" Margin="0,0,0,10" />
+                                <WrapPanel x:Name="AiProviderChips" Grid.Column="1" Margin="0,0,0,4">
+                                    <Button Content="Off" CommandParameter="off" Style="{StaticResource ReplyChip}" Padding="14,5" FontSize="13" Click="AiProvider_Click" />
+                                    <Button Content="Claude (Anthropic)" CommandParameter="claude" Style="{StaticResource ReplyChip}" Padding="14,5" FontSize="13" Click="AiProvider_Click" />
+                                    <Button Content="OpenAI (ChatGPT)" CommandParameter="openai" Style="{StaticResource ReplyChip}" Padding="14,5" FontSize="13" Click="AiProvider_Click" />
+                                    <Button Content="A model on this PC (Ollama, LM Studio)" CommandParameter="local" Style="{StaticResource ReplyChip}" Padding="14,5" FontSize="13" Click="AiProvider_Click" />
+                                </WrapPanel>
+
+                                <TextBlock x:Name="AiKeyLabel" Grid.Row="1" Text="Your API key" VerticalAlignment="Center" Margin="0,0,0,10" />
+                                <WrapPanel x:Name="AiKeyRow" Grid.Row="1" Grid.Column="1" Margin="0,0,0,10">
+                                    <PasswordBox x:Name="AiKeyBox" Width="280" VerticalContentAlignment="Center" Padding="4,3" Margin="0,0,8,0" />
+                                    <Button Content="save key" Style="{StaticResource KeyButton}" Padding="10,3" Margin="0,0,8,0" Click="AiSaveKey_Click" />
+                                    <Button Content="remove key" Style="{StaticResource KeyButton}" Padding="10,3" Margin="0,0,10,0" Click="AiRemoveKey_Click" />
+                                    <TextBlock x:Name="AiKeyState" Style="{StaticResource Label}" VerticalAlignment="Center" />
+                                </WrapPanel>
+
+                                <TextBlock x:Name="AiUrlLabel" Grid.Row="2" Text="Address" VerticalAlignment="Center" Margin="0,0,0,10" />
+                                <TextBox x:Name="AiUrlBox" Grid.Row="2" Grid.Column="1" Width="280" HorizontalAlignment="Left" Padding="4,3" Margin="0,0,0,10"
+                                         ToolTip="Where the model on this PC listens. Ollama: http://localhost:11434   LM Studio: http://localhost:1234" LostFocus="AiUrl_LostFocus" />
+
+                                <TextBlock Grid.Row="3" Text="Model" VerticalAlignment="Center" Margin="0,0,0,10" />
+                                <WrapPanel Grid.Row="3" Grid.Column="1" Margin="0,0,0,10">
+                                    <TextBox x:Name="AiModelBox" Width="280" Padding="4,3" VerticalAlignment="Center" Margin="0,0,8,0" VerticalContentAlignment="Center" LostFocus="AiModel_Changed" />
+                                    <Button Content="check connection" Style="{StaticResource KeyButton}" Padding="10,3" Click="AiCheck_Click"
+                                            ToolTip="Checks your key or address works and lists the models you can pick. Sends no SOLIDWORKS information." />
+                                </WrapPanel>
+
+                                <ScrollViewer x:Name="AiModelListScroll" Grid.Row="4" Grid.Column="1" MaxHeight="120" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10" Visibility="Collapsed">
+                                    <ItemsControl x:Name="AiModelList">
+                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Content="{Binding Name}" Tag="{Binding On}" Style="{StaticResource ReplyChip}" Padding="10,3" FontSize="12" Margin="0,0,6,6"
+                                                        Click="AiModelPick_Click" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                                <WrapPanel Grid.Row="5" Grid.Column="1" Margin="0,0,0,4">
+                                    <CheckBox x:Name="AiPreviewEach" Content="Show me what will be sent before each question" VerticalAlignment="Center" Margin="0,0,14,0"
+                                              Click="AiPreviewEach_Click" />
+                                    <Button Content="show what would be sent now" Style="{StaticResource KeyButton}" Padding="10,3" Click="AskWhatSent_Click" />
+                                </WrapPanel>
+                            </Grid>
+                            <TextBlock x:Name="AiStatus" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="About" Style="{StaticResource SectionName}" Margin="0,0,0,10" />
+
+            <DockPanel>
+                <Ellipse x:Name="StatusDot" Width="7" Height="7" Fill="{StaticResource Dim}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                <TextBlock x:Name="ReadOnlyText" Text="read only  v0.1" Style="{StaticResource Label}" DockPanel.Dock="Right" Margin="12,0,0,0"
+                           ToolTip="This app watches and never changes or stops anything." />
+                <TextBlock x:Name="StatusText" Style="{StaticResource Label}" Text="looking for solidworks..." TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+            <!-- Kept for the tooltip on "read only" (hover there to see when it last checked and where logs go) -->
+            <TextBlock x:Name="UpdatedText" Style="{StaticResource Label}" Visibility="Collapsed" />
+            <TextBlock x:Name="DataFoldersText" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,2,0,0" Visibility="Collapsed" />
+            <!-- A small credit line, only if one is set in this PC's settings (never written into the code). -->
+
+        
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

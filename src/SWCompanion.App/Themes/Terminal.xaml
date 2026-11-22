@@ -1,0 +1,297 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        "Terminal" theme. Loosely inspired by retro-futuristic wrist-computer and
+        green phosphor CRT screens (inspiration only: no game names, characters or
+        logos). Green on near-black, faint scanlines, monospace everywhere, amber
+        for warnings and locks, red only for maxed-out cores.
+        Uses the same resource names as Studio.xaml, so App.xaml can load either.
+        Glow is used only on the title, which never changes: glows on moving
+        parts cost CPU (measured earlier).
+    -->
+
+    <!-- ===== Colours ===== -->
+    <Color x:Key="BgColor">#050D07</Color>          <!-- near-black, slightly green -->
+    <Color x:Key="ScanColor">#0A1A0E</Color>        <!-- scanline -->
+    <Color x:Key="ModuleColor">#07140B</Color>
+    <Color x:Key="ScreenColor">#020803</Color>
+    <Color x:Key="PhosphorColor">#4CFF7A</Color>    <!-- main green -->
+    <Color x:Key="HotColor">#D6FFE0</Color>         <!-- over-bright phosphor: SOLIDWORKS, busy -->
+    <Color x:Key="MutedColor">#2A9A4C</Color>
+    <Color x:Key="DimColor">#174E27</Color>
+    <Color x:Key="LineColor">#1D5A30</Color>
+    <Color x:Key="InfoColor">#38D6B4</Color>        <!-- teal-green: PDM -->
+    <Color x:Key="WarnColor">#FFB000</Color>        <!-- amber: licensing, locks -->
+    <Color x:Key="AlarmColor">#FF5A46</Color>       <!-- red: maxed out -->
+
+    <SolidColorBrush x:Key="Bg" Color="{StaticResource BgColor}" />
+    <SolidColorBrush x:Key="Module" Color="{StaticResource ModuleColor}" />
+    <SolidColorBrush x:Key="Screen" Color="{StaticResource ScreenColor}" />
+    <SolidColorBrush x:Key="ScreenText" Color="{StaticResource PhosphorColor}" />
+    <SolidColorBrush x:Key="ScreenMuted" Color="{StaticResource MutedColor}" />
+    <SolidColorBrush x:Key="ScreenDim" Color="{StaticResource DimColor}" />
+    <SolidColorBrush x:Key="Line" Color="{StaticResource LineColor}" />
+    <SolidColorBrush x:Key="Text" Color="{StaticResource PhosphorColor}" />
+    <SolidColorBrush x:Key="Muted" Color="{StaticResource MutedColor}" />
+    <SolidColorBrush x:Key="Dim" Color="{StaticResource DimColor}" />
+    <SolidColorBrush x:Key="Accent" Color="{StaticResource HotColor}" />
+    <SolidColorBrush x:Key="Info" Color="{StaticResource InfoColor}" />
+    <SolidColorBrush x:Key="Warn" Color="{StaticResource WarnColor}" />
+    <SolidColorBrush x:Key="Alarm" Color="{StaticResource AlarmColor}" />
+    <SolidColorBrush x:Key="Ok" Color="{StaticResource PhosphorColor}" />
+    <SolidColorBrush x:Key="Selection" Color="#334CFF7A" />
+    <SolidColorBrush x:Key="KnobRing" Color="#994CFF7A" />
+    <SolidColorBrush x:Key="TagText" Color="{StaticResource BgColor}" />
+
+    <!-- CRT scanlines: one faint line every 3 pixels (static, costs no CPU) -->
+    <DrawingBrush x:Key="BodyPattern" TileMode="Tile"
+                  Viewport="0,0,3,3" ViewportUnits="Absolute"
+                  Viewbox="0,0,3,3" ViewboxUnits="Absolute">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource Bg}">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry Rect="0,0,3,3" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing>
+                    <GeometryDrawing.Brush>
+                        <SolidColorBrush Color="{StaticResource ScanColor}" />
+                    </GeometryDrawing.Brush>
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry Rect="0,0,3,1" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DrawingBrush x:Key="ScreenPattern" TileMode="Tile"
+                  Viewport="0,0,3,3" ViewportUnits="Absolute"
+                  Viewbox="0,0,3,3" ViewboxUnits="Absolute">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource Screen}">
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry Rect="0,0,3,3" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+                <GeometryDrawing>
+                    <GeometryDrawing.Brush>
+                        <SolidColorBrush Color="#0C2412" />
+                    </GeometryDrawing.Brush>
+                    <GeometryDrawing.Geometry>
+                        <RectangleGeometry Rect="0,0,3,1" />
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+
+    <!-- ===== Fonts: monospace everywhere ===== -->
+    <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
+    <FontFamily x:Key="UiFont">Cascadia Mono, Consolas</FontFamily>
+
+    <DropShadowEffect x:Key="PhosphorGlow" Color="{StaticResource PhosphorColor}" BlurRadius="16" ShadowDepth="0" Opacity="0.8" />
+
+    <!-- ===== Text ===== -->
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    </Style>
+    <Style x:Key="Title" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Effect" Value="{StaticResource PhosphorGlow}" />
+    </Style>
+    <Style x:Key="Label" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource Muted}" />
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style x:Key="ScreenLabel" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource ScreenMuted}" />
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="FontSize" Value="11.5" />
+    </Style>
+    <Style x:Key="SectionNumber" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource Bg}" />
+        <Setter Property="Background" Value="{StaticResource Text}" />
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Padding" Value="4,0" />
+        <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+    <Style x:Key="SectionName" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- ===== Panels: thin green frames ===== -->
+    <Style x:Key="ModulePanel" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Module}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="2" />
+        <Setter Property="Padding" Value="16" />
+    </Style>
+    <Style x:Key="ScreenPanel" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource ScreenPattern}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Text}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="2" />
+        <Setter Property="Padding" Value="18,16" />
+    </Style>
+    <Style x:Key="Tag" TargetType="Border">
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Padding" Value="6,1,6,2" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="AnswerPanel" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Screen}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Text}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="14,12" />
+    </Style>
+
+    <Style x:Key="KeyButton" TargetType="Button">
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Cap" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1" Padding="12,5,12,4">
+                        <ContentPresenter HorizontalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Cap" Property="BorderBrush" Value="{StaticResource Text}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Cap" Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="on">
+                <Setter Property="Background" Value="{StaticResource Text}" />
+                <Setter Property="Foreground" Value="{StaticResource Bg}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ===== Tooltip ===== -->
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="{StaticResource Screen}" />
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Text}" />
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    </Style>
+
+    <!-- ===== Slim scroll bars ===== -->
+    <Style x:Key="ScrollThumb" TargetType="Thumb">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border Background="{StaticResource Line}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="ScrollBar">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Width" Value="8" />
+        <Setter Property="MinWidth" Value="8" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Track x:Name="PART_Track" IsDirectionReversed="True">
+                        <Track.Thumb>
+                            <Thumb Style="{StaticResource ScrollThumb}" Margin="1" />
+                        </Track.Thumb>
+                    </Track>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Width" Value="Auto" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Height" Value="8" />
+                <Setter Property="MinHeight" Value="8" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Track x:Name="PART_Track" IsDirectionReversed="False">
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource ScrollThumb}" Margin="1" />
+                                </Track.Thumb>
+                            </Track>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ===== Program table ===== -->
+    <Style TargetType="DataGrid">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="RowBackground" Value="Transparent" />
+        <Setter Property="AlternatingRowBackground" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource Text}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource Dim}" />
+        <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="RowHeaderWidth" Value="0" />
+    </Style>
+    <Style TargetType="DataGridColumnHeader">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridColumnHeader">
+                    <Border BorderBrush="{StaticResource Text}" BorderThickness="0,0,0,1" Padding="8,4,8,6">
+                        <ContentPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Foreground" Value="{StaticResource Muted}" />
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style TargetType="DataGridCell">
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="8,7" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridCell">
+                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{StaticResource Selection}" />
+                <Setter Property="Foreground" Value="{StaticResource Text}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+</ResourceDictionary>

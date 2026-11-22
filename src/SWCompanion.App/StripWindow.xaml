@@ -1,0 +1,48 @@
+<Window x:Class="SWCompanion.App.StripWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Companion for SOLIDWORKS" Width="176" SizeToContent="Height"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
+        Topmost="True" ShowInTaskbar="True" ShowActivated="False">
+    <!--
+        The slim strip: sits on the edge of a screen, always on top, out of the way. Shows the status light,
+        three numbers and the fix count; during a slowdown it widens with the plain-English explanation.
+        Drag it anywhere; "open" goes back to the full window.
+    -->
+    <Border x:Name="Card" Background="{DynamicResource Module}" BorderBrush="{DynamicResource Line}" BorderThickness="1"
+            CornerRadius="14" Padding="14,12" MouseLeftButtonDown="Card_MouseLeftButtonDown" Cursor="SizeAll">
+        <StackPanel>
+            <DockPanel Margin="0,0,0,8">
+                <Ellipse x:Name="Light" Width="12" Height="12" Fill="{DynamicResource Dim}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBlock x:Name="Status" FontSize="14" FontWeight="SemiBold" Text="Watching" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            </DockPanel>
+
+            <!-- During a slowdown: the explanation -->
+            <StackPanel x:Name="Explain" Visibility="Collapsed" Margin="0,0,0,10">
+                <TextBlock x:Name="ExplainTitle" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock x:Name="ExplainBody" FontSize="13" LineHeight="18" TextWrapping="Wrap" Foreground="{DynamicResource Muted}" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition /><RowDefinition /><RowDefinition />
+                </Grid.RowDefinitions>
+                <TextBlock Text="CPU" Foreground="{DynamicResource Muted}" FontSize="12.5" Margin="0,0,10,3" />
+                <TextBlock x:Name="Cpu" Grid.Column="1" FontSize="12.5" FontWeight="SemiBold" Text="-" TextAlignment="Right" />
+                <TextBlock Grid.Row="1" Text="RAM" Foreground="{DynamicResource Muted}" FontSize="12.5" Margin="0,0,10,3" />
+                <TextBlock x:Name="Mem" Grid.Row="1" Grid.Column="1" FontSize="12.5" FontWeight="SemiBold" Text="-" TextAlignment="Right" />
+                <TextBlock Grid.Row="2" Text="Disk" Foreground="{DynamicResource Muted}" FontSize="12.5" Margin="0,0,10,0" />
+                <TextBlock x:Name="Disk" Grid.Row="2" Grid.Column="1" FontSize="12.5" FontWeight="SemiBold" Text="-" TextAlignment="Right" />
+            </Grid>
+
+            <Button x:Name="FixesKey" Style="{DynamicResource KeyButton}" Margin="0,0,0,6" Click="Fixes_Click" Visibility="Collapsed"
+                    ToolTip="Open the fixes in the full window" />
+            <Button Content="open" Style="{DynamicResource KeyButton}" Margin="0" Click="Open_Click"
+                    ToolTip="Back to the full window" />
+        </StackPanel>
+    </Border>
+</Window>

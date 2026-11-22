@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SWCompanion.AddIn/SWCompanion.AddIn.csproj" />
+    <Project Path="src/SWCompanion.App/SWCompanion.App.csproj" />
+    <Project Path="src/SWCompanion.Contracts/SWCompanion.Contracts.csproj" />
+    <Project Path="src/SWCompanion.Core/SWCompanion.Core.csproj" />
+    <Project Path="src/SWCompanion.Link/SWCompanion.Link.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SWCompanion.Core.Tests/SWCompanion.Core.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The engine: process watching, tracing, hang detection, plain-English translation. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SWCompanion.Contracts\SWCompanion.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Microsoft's library for reading Windows' event logs (program hangs, graphics driver resets, disk errors, Defender). -->
+    <PackageReference Include="System.Diagnostics.EventLog" Version="9.0.0" />
+    <!-- Microsoft's package for reading Windows performance counters (the GPU numbers Task Manager shows). -->
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.0" />
+    <!-- Microsoft's library for Windows event tracing (step 7: which files SOLIDWORKS reads). -->
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.13" />
+    <!-- Microsoft's library for Windows management queries: installed antivirus and Defender's folder protection settings. -->
+    <PackageReference Include="System.Management" Version="9.0.0" />
+  </ItemGroup>
+</Project>

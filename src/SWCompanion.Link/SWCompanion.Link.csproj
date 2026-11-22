@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The Companion's outside link to a running SOLIDWORKS (no add-in needed). Uses the same
+       SOLIDWORKS API as the add-in, from the Companion's own process. Kept apart from Core so the
+       rest of the Companion never depends on SOLIDWORKS's API files. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <SolidWorksApi Condition="'$(SolidWorksApi)' == ''">$(ProgramW6432)\SOLIDWORKS Corp\SOLIDWORKS\api\redist</SolidWorksApi>
+    <!-- The SOLIDWORKS API files are older .NET Framework files; they work here, so don't warn about it. -->
+    <NoWarn>$(NoWarn);NU1701;MSB3277</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SWCompanion.Contracts\SWCompanion.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Shared with the add-in: reading drawing views and the "time each view" test. -->
+    <Compile Include="..\SWCompanion.AddIn\DrawingViews.cs" Link="Shared\DrawingViews.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="SolidWorks.Interop.sldworks"><HintPath>$(SolidWorksApi)\SolidWorks.Interop.sldworks.dll</HintPath><Private>true</Private><EmbedInteropTypes>false</EmbedInteropTypes></Reference>
+    <!-- swcommands: names for SOLIDWORKS's command numbers (to say "Extrude" rather than "command 1234"). -->
+    <Reference Include="SolidWorks.Interop.swcommands"><HintPath>$(SolidWorksApi)\SolidWorks.Interop.swcommands.dll</HintPath><Private>true</Private><EmbedInteropTypes>false</EmbedInteropTypes></Reference>
+    <Reference Include="SolidWorks.Interop.swconst"><HintPath>$(SolidWorksApi)\SolidWorks.Interop.swconst.dll</HintPath><Private>true</Private><EmbedInteropTypes>false</EmbedInteropTypes></Reference>
+  </ItemGroup>
+</Project>
