@@ -21,7 +21,7 @@ Created by **Phillip Lewis**, Phillip.Lewis@converge.design. Questions, ideas an
 
 - **What's happening, live.** A running log, in everyday words, of what SOLIDWORKS is doing (opening, rebuilding,
   switching sheets, saving) and what the rest of the computer is doing to it.
-- **"Hung up" panel.** Anything that holds SOLIDWORKS up slides out of the log into its own list: freezes, slow opens,
+- **"Came and went" panel.** Anything that holds SOLIDWORKS up slides out of the log into its own list: freezes, slow opens,
   slow sheet switches, windows that take longer than usual to appear after you click, files saved in older SOLIDWORKS
   versions, and anything Windows recorded at the same moment (a program crashing, the graphics driver resetting, disk
   errors, low memory, network drops, Windows Defender blocking or quarantining a file). Click any of them for:
@@ -35,7 +35,7 @@ Created by **Phillip Lewis**, Phillip.Lewis@converge.design. Questions, ideas an
 - **The basics at a glance.** Small live charts of the processor, each core, memory, graphics card, disk and network.
 - **Ask your own AI (optional).** Ask Claude, ChatGPT or an AI running on your own PC about what's happening, using
   your own account. Off unless you set it up.
-- Light and dark look, and a slim always-on-top strip for a second monitor.
+- Light and dark look (the sun/moon switch at the top right), a sidebar you can drag wider, and a slim always-on-top strip for a second monitor.
 
 ## What it never does
 
@@ -82,7 +82,7 @@ Created by **Phillip Lewis**, Phillip.Lewis@converge.design. Questions, ideas an
 1. Start SOLIDWORKS as usual (before or after the Companion; it finds SOLIDWORKS by itself within a few seconds).
 2. Work normally. Keep the Companion open on a second monitor, or switch to the **Slim strip** (bottom of the left
    bar), which stays on top and widens with an explanation when SOLIDWORKS slows down.
-3. When something holds SOLIDWORKS up, it appears in **hung up**. Click it for the explanation and what to try.
+3. When something holds SOLIDWORKS up, it appears in **came and went**. Click it for the explanation and what to try.
 4. Look at **Fixes** once: it lists the settings on your PC most likely to slow SOLIDWORKS down, one at a time, with
    the steps. After you change something, press **I did it, check it**.
 

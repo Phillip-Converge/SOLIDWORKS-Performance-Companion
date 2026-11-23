@@ -118,6 +118,8 @@ public partial class MainWindow : Window
         Loaded += (_, _) => _layout.SetupDetailTiles(this, DetailTilesHost, sidebarWidth: 280);
         RestoreWindowPlace();
         ThemeKey.Content = App.Dark ? "light mode" : "dark mode";
+        ShowThemeToggle();
+        if (App.Settings.SidebarWidth is { } sidebar) SidebarColumn.Width = new GridLength(Math.Clamp(sidebar, SidebarColumn.MinWidth, SidebarColumn.MaxWidth));
         // Who made the Companion: shown to everyone, at the bottom of the sidebar (the owner's choice, 2026-11-22).
         CreditText.Text = AppInfo.Credit;
         CreditText.Visibility = Visibility.Visible;
@@ -744,7 +746,7 @@ public partial class MainWindow : Window
 
     private sealed record StoryRow(string Clock, string Text, Brush Dot, Brush Tint, FontWeight Weight)
     {
-        /// <param name="hang">A line that was pulled out into the "hung up" panel: it stays highlighted in the log.</param>
+        /// <param name="hang">A line that was pulled out into the "came and went" panel: it stays highlighted in the log.</param>
         public static StoryRow From(StoryLine l, bool hang = false) => new(l.Clock, l.Text, l.Tone switch
         {
             StoryTone.Good => Theme.Ok,
@@ -1266,6 +1268,31 @@ public partial class MainWindow : Window
     }
 
     // ---- your look and window place, kept for next time ----
+
+    /// <summary>You finished dragging the sidebar's edge: remember the width.</summary>
+    private void SidebarSplitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        App.Settings.SidebarWidth = Math.Round(SidebarColumn.ActualWidth);
+        App.Settings.Save();
+    }
+
+    /// <summary>The corner switch: knob on the sun side for light, on the moon side (orange track) for dark.</summary>
+    private void ShowThemeToggle()
+    {
+        ThemeKnob.HorizontalAlignment = App.Dark ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+        ThemeTrack.Background = App.Dark ? Theme.Accent : Theme.Dim;
+        ThemeSun.Foreground = App.Dark ? Theme.Dim : Theme.Accent;
+        ThemeMoon.Foreground = App.Dark ? Theme.Accent : Theme.Dim;
+    }
+
+    private void ThemeToggle_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        // Slide the knob across first, so the click visibly does something, then reopen in the new look.
+        double distance = ThemeTrack.ActualWidth - ThemeKnob.ActualWidth - 4;
+        var slide = new System.Windows.Media.Animation.DoubleAnimation(0, App.Dark ? -distance : distance, TimeSpan.FromMilliseconds(180));
+        slide.Completed += (_, _) => ThemeKey_Click(sender, e);
+        ThemeKnobShift.BeginAnimation(TranslateTransform.XProperty, slide);
+    }
 
     private void ThemeKey_Click(object sender, RoutedEventArgs e)
     {

@@ -11,7 +11,7 @@ public sealed record WinEvent(DateTime Time, string Log, string Provider, int Id
 /// <param name="Kind">"win-hang", "win-crash", "win-gpu", "win-disk", "win-memory", "win-network" or "win-throttle".</param>
 /// <param name="Line">One short sentence for the running log.</param>
 /// <param name="Detail">The useful facts from the event (program, module, which disk), kept short.</param>
-/// <param name="Serious">Worth pulling out into the "hung up" panel on its own, even when SOLIDWORKS didn't freeze.</param>
+/// <param name="Serious">Worth pulling out into the "came and went" panel on its own, even when SOLIDWORKS didn't freeze.</param>
 /// <param name="SolidWorks">The event is about SOLIDWORKS or one of its helper programs.</param>
 public sealed record EventFinding(DateTime Time, string Kind, string Line, string Detail, bool Serious, bool SolidWorks, string Source);
 

@@ -23,7 +23,7 @@ public sealed record OldVersionReport(string Opened, int RunningYear, int Total,
 /// </summary>
 public static class OldVersions
 {
-    /// <summary>Flag in the "hung up" panel when the open took at least this long and old files were part of it.</summary>
+    /// <summary>Flag in the "came and went" panel when the open took at least this long and old files were part of it.</summary>
     public const double SlowOpenSeconds = 5;
     /// <summary>...or when this many files are old, however long the open took.</summary>
     public const int ManyOld = 20;
@@ -50,7 +50,7 @@ public static class OldVersions
         return new OldVersionReport(opened, runningYear, files.Count, old, files.Count(f => f.Year is null), openSeconds);
     }
 
-    /// <summary>Worth pulling out into the "hung up" panel: old files made a slow open slower, or there are a lot of them.</summary>
+    /// <summary>Worth pulling out into the "came and went" panel: old files made a slow open slower, or there are a lot of them.</summary>
     public static bool WorthFlagging(OldVersionReport r) =>
         r.Any && ((r.OpenSeconds ?? 0) >= SlowOpenSeconds || r.Old.Count >= ManyOld);
 

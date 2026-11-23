@@ -9,7 +9,7 @@ using SWCompanion.Core.Now;
 namespace SWCompanion.App;
 
 /// <summary>
-/// The "hung up" panel beside the running log. Windows' own event records (program hangs, graphics driver resets,
+/// The "came and went" panel beside the running log. Windows' own event records (program hangs, graphics driver resets,
 /// disk errors, low memory, network drops) are written into the log as they happen. Anything that held SOLIDWORKS up,
 /// and any serious Windows event, is pulled out of the log: the line stays highlighted, a copy of it slides across
 /// into the panel, and clicking it explains what happened and what to do. Read only.
@@ -68,7 +68,7 @@ public partial class MainWindow
 
     private void ArrangeLogAndHangs()
     {
-        // "What's happening" and "hung up" are the heart of the page: they fill the window below the compact strip.
+        // "What's happening" and "came and went" are the heart of the page: they fill the window below the compact strip.
         if (PagePerformance.Content is FrameworkElement page && LogAndHangs.IsVisible)
         {
             double top = LogAndHangs.TranslatePoint(new Point(0, 0), page).Y;
@@ -127,7 +127,7 @@ public partial class MainWindow
     {
         _nextLineIsHang = true;
         _story.Note(m.Start + m.Duration > DateTime.Now ? DateTime.Now : m.Start + m.Duration,
-            (m.Kind.StartsWith("win-") ? "" : "Hung up: ") + m.Title, StoryTone.Bad);
+            (m.Kind.StartsWith("win-") || m.Title.EndsWith("(came and went)", StringComparison.Ordinal) ? "" : "Came and went: ") + m.Title, StoryTone.Bad);
         var row = _lastHangRow;
         // After this second's layout (the panel list is rebuilt in the same tick), fly the line across.
         Dispatcher.BeginInvoke(() => SlideIn(row, m.Title), System.Windows.Threading.DispatcherPriority.Background);
@@ -221,7 +221,7 @@ public partial class MainWindow
         HangList.Visibility = Visibility.Collapsed;
         HangDetail.Visibility = Visibility.Visible;
         HangDetailScroll.ScrollToTop();
-        _log.Write($"hung up: you opened the explanation for \"{row.Moment.Title}\" ({row.Moment.Start:HH:mm:ss}).");
+        _log.Write($"came and went: you opened the explanation for \"{row.Moment.Title}\" ({row.Moment.Start:HH:mm:ss}).");
     }
 
     private Moment? _hangShown;
@@ -233,7 +233,7 @@ public partial class MainWindow
         HangMoreBox.Visibility = Visibility.Visible;
         HangTechKey.Visibility = Visibility.Visible;
         HangMoreBox.BringIntoView();
-        if (_hangShown is { } m) _log.Write($"hung up: you asked for more about \"{m.Title}\".");
+        if (_hangShown is { } m) _log.Write($"came and went: you asked for more about \"{m.Title}\".");
     }
 
     private void HangTech_Click(object sender, RoutedEventArgs e)
@@ -241,7 +241,7 @@ public partial class MainWindow
         HangTechKey.Visibility = Visibility.Collapsed;
         HangTechBox.Visibility = Visibility.Visible;
         HangTechBox.BringIntoView();
-        if (_hangShown is { } m) _log.Write($"hung up: you opened the recorded details for \"{m.Title}\".");
+        if (_hangShown is { } m) _log.Write($"came and went: you opened the recorded details for \"{m.Title}\".");
     }
 
     private void HangBack_Click(object sender, RoutedEventArgs e)

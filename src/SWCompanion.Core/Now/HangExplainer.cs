@@ -14,7 +14,7 @@ public sealed record HangExplanation(string Title, string When, string WhatHappe
 }
 
 /// <summary>
-/// Explains a caught moment (a freeze, a slow open, a Windows event...) for the "hung up" panel. Advice is general
+/// Explains a caught moment (a freeze, a slow open, a Windows event...) for the "came and went" panel. Advice is general
 /// SOLIDWORKS support practice and Microsoft's documentation; where the Companion can't know the cause, it says so.
 /// Pure text, so it can be tested.
 /// </summary>

@@ -29,6 +29,8 @@ internal sealed class AppSettings
     public bool StripMode { get; set; }
     public double? StripLeft { get; set; }
     public double? StripTop { get; set; }
+    /// <summary>How wide you dragged the left sidebar (null = the standard width).</summary>
+    public double? SidebarWidth { get; set; }
     /// <summary>"Ask AI": which service ("off", "claude", "openai", "local"), which model, where a model on this PC listens,
     /// and whether you said not to show "what will be sent" before each question. The key itself is NOT here (see AiKeyStore).</summary>
     public string AiProvider { get; set; } = "off";

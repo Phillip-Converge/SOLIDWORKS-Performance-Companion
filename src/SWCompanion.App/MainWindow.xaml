@@ -99,7 +99,7 @@
             <Setter Property="Foreground" Value="{DynamicResource Text}" />
         </Style>    </Window.Resources>    <Grid x:Name="RootGrid">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="230" />
+            <ColumnDefinition x:Name="SidebarColumn" Width="230" MinWidth="190" MaxWidth="460" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -180,6 +180,10 @@
             </DockPanel>
         </Border>
 
+        <!-- Drag the sidebar's right edge to make it wider or narrower (remembered for next time). -->
+        <GridSplitter x:Name="SidebarSplitter" Grid.Column="0" Width="6" HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                      Background="Transparent" ResizeDirection="Columns" ResizeBehavior="CurrentAndNext" Cursor="SizeWE"
+                      ToolTip="Drag to resize the sidebar" DragCompleted="SidebarSplitter_DragCompleted" />
         <!-- ===== Content: what's happening (always), then the page you picked ===== -->
         <Grid Grid.Column="1" Margin="28,20,22,14">
             <Grid.RowDefinitions>
@@ -200,6 +204,20 @@
                                        Foreground="{StaticResource TagText}" />
                         </Border>
                         <TextBlock x:Name="NowClock" Style="{StaticResource Label}" VerticalAlignment="Center" />
+                        <!-- Light / dark: a small sun-moon switch in the corner -->
+                        <StackPanel x:Name="ThemeToggle" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0" Cursor="Hand"
+                                    Background="Transparent" MouseLeftButtonUp="ThemeToggle_Click" ToolTip="Light or dark look (the Companion reopens in the new look)">
+                            <TextBlock x:Name="ThemeSun" Text="&#xE706;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13"
+                                       VerticalAlignment="Center" Foreground="{StaticResource Dim}" />
+                            <Border x:Name="ThemeTrack" Width="30" Height="16" CornerRadius="8" Margin="6,0,6,0" VerticalAlignment="Center"
+                                    Background="{StaticResource Line}">
+                                <Ellipse x:Name="ThemeKnob" Width="12" Height="12" Fill="White" HorizontalAlignment="Left" Margin="2,0,2,0">
+                                    <Ellipse.RenderTransform><TranslateTransform x:Name="ThemeKnobShift" /></Ellipse.RenderTransform>
+                                </Ellipse>
+                            </Border>
+                            <TextBlock x:Name="ThemeMoon" Text="&#xE708;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12"
+                                       VerticalAlignment="Center" Foreground="{StaticResource Dim}" />
+                        </StackPanel>
                     </StackPanel>
                     <ScrollViewer x:Name="NowScroll" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
@@ -259,7 +277,7 @@
             </StackPanel>
         </Border>
             <!-- One compact strip: the guide's latest word, your replies and questions, where it's held up, and the last slow wait.
-                 Kept small so "what's happening" and "hung up" below get most of the window. -->
+                 Kept small so "what's happening" and "came and went" below get most of the window. -->
             <Border x:Name="TopStrip" Style="{StaticResource ModulePanel}" Padding="18,12" Margin="0,0,0,12">
                 <StackPanel>
                     <DockPanel>
@@ -374,7 +392,7 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
-                    <!-- The running log, and beside it the "hung up" panel that things slide into from the log. -->
+                    <!-- The running log, and beside it the "came and went" panel that things slide into from the log. -->
                     <Grid x:Name="LogAndHangs" Height="460" Margin="0,0,0,14">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="1.35*" />
@@ -417,14 +435,14 @@
                     </ScrollViewer>
                 </DockPanel>
             </Border>
-<!-- The "hung up" panel: anything that held SOLIDWORKS up slides in here from the log; click one for the plain-English story. -->
+<!-- The "came and went" panel: anything that held SOLIDWORKS up slides in here from the log; click one for the plain-English story. -->
 <Border x:Name="CaughtSection" Grid.Column="2" Style="{StaticResource ModulePanel}" Margin="0" Padding="14,12,6,12">
     <Grid>
         <DockPanel x:Name="HangList">
             <DockPanel DockPanel.Dock="Top" Margin="0,0,8,8">
                 <Button x:Name="CaughtSeenKey" Content="mark all seen" Style="{StaticResource KeyButton}" DockPanel.Dock="Right" Padding="8,2"
                         Click="CaughtSeenKey_Click" />
-                <TextBlock Text="hung up" Style="{StaticResource SectionName}" VerticalAlignment="Center" />
+                <TextBlock Text="came and went" Style="{StaticResource SectionName}" VerticalAlignment="Center" />
                 <TextBlock x:Name="CaughtSummary" Style="{StaticResource Label}" Margin="10,0,0,0" VerticalAlignment="Center" Text="nothing yet" />
             </DockPanel>
             <TextBlock x:Name="CaughtExplain" DockPanel.Dock="Bottom" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,8,8,0"
