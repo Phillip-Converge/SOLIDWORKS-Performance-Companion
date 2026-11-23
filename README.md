@@ -18,6 +18,9 @@ Created by **Phillip Lewis**, Phillip.Lewis@converge.design. Questions, ideas an
 ---
 <img width="1931" height="1042" alt="Side-by-Side-Solidworks" src="https://github.com/user-attachments/assets/8b7e7c5e-a42b-4906-a275-524ad8f83e2c" />
 
+<img width="3464" height="1994" alt="Screenshot 2026-11-22 213847" src="https://github.com/user-attachments/assets/e9c36279-9fab-4410-b17e-3962ff2c1a57" />
+
+
 ## What it does
 
 - **What's happening, live.** A running log, in everyday words, of what SOLIDWORKS is doing (opening, rebuilding,
