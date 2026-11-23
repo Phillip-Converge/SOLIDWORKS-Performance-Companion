@@ -135,6 +135,9 @@
                     <Button x:Name="NavCrashes" Style="{StaticResource NavButton}" Click="Nav_Click" CommandParameter="crashes">
                         <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE7BA;" Style="{StaticResource NavIcon}" /><TextBlock Text="Crashes" /></StackPanel>
                     </Button>
+                    <Button x:Name="NavPdm" Style="{StaticResource NavButton}" Click="Nav_Click" CommandParameter="pdm" ToolTip="SOLIDWORKS PDM: the vault, its servers and what slows it down">
+                        <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8B7;" Style="{StaticResource NavIcon}" /><TextBlock Text="PDM" /></StackPanel>
+                    </Button>
                     <Button x:Name="NavDetails" Style="{StaticResource NavButton}" Click="Nav_Click" CommandParameter="details">
                         <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8FD;" Style="{StaticResource NavIcon}" /><TextBlock Text="Details" /></StackPanel>
                     </Button>
@@ -694,6 +697,175 @@
                 </StackPanel>
             </ScrollViewer>
 
+            <!-- PDM: everything about the vault in one place, because PDM is a big part of how fast SOLIDWORKS feels -->
+            <ScrollViewer x:Name="PagePdm" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                <StackPanel Margin="0,0,6,0">
+                    <Border Style="{StaticResource ModulePanel}" Padding="22,18" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="PDM" Style="{StaticResource SectionName}" Margin="0,0,0,8" />
+                            <TextBlock x:Name="PdmStatusTitle" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" Text="Looking for SOLIDWORKS PDM..." />
+                            <TextBlock x:Name="PdmStatusText" FontSize="13.5" LineHeight="20" TextWrapping="Wrap" Foreground="{StaticResource Muted}" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock x:Name="PdmHoldUpsCount" Style="{StaticResource Label}" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                                <TextBlock Text="PDM hold-ups today" Style="{StaticResource SectionName}" />
+                            </DockPanel>
+                            <TextBlock x:Name="PdmHoldUpsEmpty" Style="{StaticResource Label}" TextWrapping="Wrap"
+                                       Text="Nothing PDM-related has held SOLIDWORKS up today. Vault waits, slow vault servers, and PDM programs hanging or crashing show up here." />
+                            <ItemsControl x:Name="PdmHoldUps">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource Bg}" BorderBrush="{Binding Edge}" BorderThickness="3,0,0,0" CornerRadius="8"
+                                                Padding="10,8" Margin="0,0,0,6" Cursor="Hand" MouseLeftButtonUp="PdmHoldUp_Click" ToolTip="What happened, and what to do">
+                                            <DockPanel>
+                                                <TextBlock Text="explain ›" DockPanel.Dock="Right" FontSize="12" Foreground="{StaticResource Accent}" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding When}" Style="{StaticResource Label}" DockPanel.Dock="Left" Width="110" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="PDM settings on this PC" Style="{StaticResource SectionName}" Margin="0,0,0,10" />
+                            <ItemsControl x:Name="PdmChecks">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="20" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Ellipse Width="9" Height="9" Fill="{Binding Dot}" VerticalAlignment="Top" Margin="0,6,0,0" HorizontalAlignment="Left" />
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding Finding}" FontSize="13" LineHeight="19" TextWrapping="Wrap" Margin="0,2,0,0" />
+                                                <TextBlock Text="{Binding Fix}" FontSize="12.5" LineHeight="18" TextWrapping="Wrap" Foreground="{StaticResource Muted}"
+                                                           Margin="0,3,0,0" Visibility="{Binding FixVisibility}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+        <!-- ===== 07 pdm vault: servers, names, ports, the user's notes ===== -->
+        <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,10">
+                    
+                    <TextBlock Text="vault connection" Style="{StaticResource SectionName}" />
+                    <TextBlock Text="every 10 s   port test only when you click it" Style="{StaticResource Label}" HorizontalAlignment="Right" />
+                </DockPanel>
+                <TextBlock x:Name="VaultSummaryText" FontSize="15" TextWrapping="Wrap" Margin="2,0,0,8" Text="looking for vault views..." />
+                <ComboBox x:Name="VaultPicker" Width="260" HorizontalAlignment="Left" Margin="2,0,0,10" Visibility="Collapsed"
+                          SelectionChanged="VaultPicker_SelectionChanged" />
+
+                <!-- Live traffic map: this PC, the vault's server(s), traffic between them -->
+                <TextBlock Text="live traffic map" Style="{StaticResource Label}" Margin="2,4,0,6" />
+                <Border Background="{StaticResource Bg}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="8" Padding="10">
+                    <ContentControl x:Name="MapHost" Height="200" />
+                </Border>
+                <DockPanel Margin="2,6,0,12">
+                    <Button x:Name="MapExampleKey" DockPanel.Dock="Right" Content="show an example" Style="{StaticResource KeyButton}"
+                            Margin="12,0,0,0" Click="MapExampleKey_Click" VerticalAlignment="Top" />
+                    <TextBlock x:Name="MapNote" Style="{StaticResource Label}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                </DockPanel>
+                <ItemsControl x:Name="VaultRows">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="2,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Ellipse Width="9" Height="9" Fill="{Binding Dot}" VerticalAlignment="Top" Margin="0,6,0,0" HorizontalAlignment="Left" />
+                                <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="13" LineHeight="19">
+                                    <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" />
+                                    <Run Text="  " />
+                                    <Run Text="{Binding Finding, Mode=OneWay}" />
+                                </TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <!-- Live traffic to the vault's servers (file tracing, administrator) -->
+                <Border Style="{StaticResource ScreenPanel}" Margin="0,6,0,10">
+                    <StackPanel>
+                        <TextBlock x:Name="VaultTrafficSummary" TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource ScreenText}" />
+                        <ItemsControl x:Name="VaultTrafficRows" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" Style="{StaticResource ScreenLabel}" TextWrapping="Wrap" Margin="0,0,0,6" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+                <TextBlock x:Name="VaultTrafficExplain" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" Margin="2,0,0,4" />
+                <TextBlock x:Name="VaultTrafficPlain" TextWrapping="Wrap" FontSize="12.5" LineHeight="18" FontStyle="Italic" Margin="2,0,0,10"
+                           Foreground="{StaticResource Muted}" />
+                <WrapPanel Margin="0,4,0,0">
+                    <Button x:Name="PortTestKey" Content="test the server ports" Style="{StaticResource KeyButton}" Click="PortTestKey_Click" />
+                </WrapPanel>
+                <TextBlock x:Name="PortTestNote" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="2,0,0,0"
+                           Text="Only when you click: knocks on each server's port, times the answer, and closes straight away. Nothing is sent to PDM or SQL Server. Each test is logged." />
+
+                <!-- The user's notes: what the app can't detect -->
+                <TextBlock Text="your notes about this vault" Style="{StaticResource Label}" Margin="2,16,0,6" />
+                <Grid x:Name="VaultNotesForm" Margin="2,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="210" />
+                        <ColumnDefinition Width="260" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="database (SQL) server is in" VerticalAlignment="Center" FontSize="13" />
+                    <ComboBox Grid.Row="0" Grid.Column="1" x:Name="NoteDatabaseWhere" Margin="0,2" />
+                    <TextBlock Grid.Row="1" Text="archive server is in" VerticalAlignment="Center" FontSize="13" />
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="NoteArchiveWhere" Margin="0,2" />
+                    <TextBlock Grid.Row="2" Text="this PC reaches them over" VerticalAlignment="Center" FontSize="13" />
+                    <ComboBox Grid.Row="2" Grid.Column="1" x:Name="NoteLink" Margin="0,2" />
+                    <TextBlock Grid.Row="3" Text="archive replicated between sites" VerticalAlignment="Center" FontSize="13" />
+                    <ComboBox Grid.Row="3" Grid.Column="1" x:Name="NoteReplicated" Margin="0,2" />
+                    <TextBlock Grid.Row="4" Text="anything else" VerticalAlignment="Top" Margin="0,6,0,0" FontSize="13" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" x:Name="NoteText" Margin="0,2" Height="54"
+                             TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" />
+                    <StackPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button x:Name="SaveNotesKey" Content="save notes" Style="{StaticResource KeyButton}" Click="SaveNotesKey_Click" />
+                        <TextBlock x:Name="NotesStatus" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="4,0,0,8" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+
+                    <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="how PDM affects SOLIDWORKS's speed" Style="{StaticResource SectionName}" Margin="0,0,0,10" />
+                            <ItemsControl x:Name="PdmGuide">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock TextWrapping="Wrap" FontSize="13" LineHeight="19" Margin="0,0,0,10">
+                                            <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=": " /><Run Text="{Binding Text, Mode=OneWay}" Foreground="{StaticResource Muted}" />
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
             <!-- Details: every number and check, for when you want them -->
             <ScrollViewer x:Name="PageDetails" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
                 <StackPanel Margin="0,0,6,0">
@@ -1038,98 +1210,6 @@
                         <TextBlock x:Name="FilesAnswerText" TextWrapping="Wrap" FontSize="13" LineHeight="19" />
                     </StackPanel>
                 </Border>
-            </StackPanel>
-        </Border>
-
-        <!-- ===== 07 pdm vault: servers, names, ports, the user's notes ===== -->
-        <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
-            <StackPanel>
-                <DockPanel Margin="0,0,0,10">
-                    <TextBlock Text="07" Style="{StaticResource SectionNumber}" />
-                    <TextBlock Text="pdm vault" Style="{StaticResource SectionName}" />
-                    <TextBlock Text="every 10 s   port test only when you click it" Style="{StaticResource Label}" HorizontalAlignment="Right" />
-                </DockPanel>
-                <TextBlock x:Name="VaultSummaryText" FontSize="15" TextWrapping="Wrap" Margin="2,0,0,8" Text="looking for vault views..." />
-                <ComboBox x:Name="VaultPicker" Width="260" HorizontalAlignment="Left" Margin="2,0,0,10" Visibility="Collapsed"
-                          SelectionChanged="VaultPicker_SelectionChanged" />
-
-                <!-- Live traffic map: this PC, the vault's server(s), traffic between them -->
-                <TextBlock Text="live traffic map" Style="{StaticResource Label}" Margin="2,4,0,6" />
-                <Border Background="{StaticResource Bg}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="8" Padding="10">
-                    <ContentControl x:Name="MapHost" Height="200" />
-                </Border>
-                <DockPanel Margin="2,6,0,12">
-                    <Button x:Name="MapExampleKey" DockPanel.Dock="Right" Content="show an example" Style="{StaticResource KeyButton}"
-                            Margin="12,0,0,0" Click="MapExampleKey_Click" VerticalAlignment="Top" />
-                    <TextBlock x:Name="MapNote" Style="{StaticResource Label}" TextWrapping="Wrap" VerticalAlignment="Center" />
-                </DockPanel>
-                <ItemsControl x:Name="VaultRows">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="2,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="20" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Ellipse Width="9" Height="9" Fill="{Binding Dot}" VerticalAlignment="Top" Margin="0,6,0,0" HorizontalAlignment="Left" />
-                                <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="13" LineHeight="19">
-                                    <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" />
-                                    <Run Text="  " />
-                                    <Run Text="{Binding Finding, Mode=OneWay}" />
-                                </TextBlock>
-                            </Grid>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <!-- Live traffic to the vault's servers (file tracing, administrator) -->
-                <Border Style="{StaticResource ScreenPanel}" Margin="0,6,0,10">
-                    <StackPanel>
-                        <TextBlock x:Name="VaultTrafficSummary" TextWrapping="Wrap" FontSize="15" Foreground="{StaticResource ScreenText}" />
-                        <ItemsControl x:Name="VaultTrafficRows" Margin="0,8,0,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding}" Style="{StaticResource ScreenLabel}" TextWrapping="Wrap" Margin="0,0,0,6" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
-                <TextBlock x:Name="VaultTrafficExplain" TextWrapping="Wrap" FontSize="13.5" LineHeight="20" Margin="2,0,0,4" />
-                <TextBlock x:Name="VaultTrafficPlain" TextWrapping="Wrap" FontSize="12.5" LineHeight="18" FontStyle="Italic" Margin="2,0,0,10"
-                           Foreground="{StaticResource Muted}" />
-                <WrapPanel Margin="0,4,0,0">
-                    <Button x:Name="PortTestKey" Content="test the server ports" Style="{StaticResource KeyButton}" Click="PortTestKey_Click" />
-                </WrapPanel>
-                <TextBlock x:Name="PortTestNote" Style="{StaticResource Label}" TextWrapping="Wrap" Margin="2,0,0,0"
-                           Text="Only when you click: knocks on each server's port, times the answer, and closes straight away. Nothing is sent to PDM or SQL Server. Each test is logged." />
-
-                <!-- The user's notes: what the app can't detect -->
-                <TextBlock Text="your notes about this vault" Style="{StaticResource Label}" Margin="2,16,0,6" />
-                <Grid x:Name="VaultNotesForm" Margin="2,0,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="210" />
-                        <ColumnDefinition Width="260" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="database (SQL) server is in" VerticalAlignment="Center" FontSize="13" />
-                    <ComboBox Grid.Row="0" Grid.Column="1" x:Name="NoteDatabaseWhere" Margin="0,2" />
-                    <TextBlock Grid.Row="1" Text="archive server is in" VerticalAlignment="Center" FontSize="13" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="NoteArchiveWhere" Margin="0,2" />
-                    <TextBlock Grid.Row="2" Text="this PC reaches them over" VerticalAlignment="Center" FontSize="13" />
-                    <ComboBox Grid.Row="2" Grid.Column="1" x:Name="NoteLink" Margin="0,2" />
-                    <TextBlock Grid.Row="3" Text="archive replicated between sites" VerticalAlignment="Center" FontSize="13" />
-                    <ComboBox Grid.Row="3" Grid.Column="1" x:Name="NoteReplicated" Margin="0,2" />
-                    <TextBlock Grid.Row="4" Text="anything else" VerticalAlignment="Top" Margin="0,6,0,0" FontSize="13" />
-                    <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" x:Name="NoteText" Margin="0,2" Height="54"
-                             TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" />
-                    <StackPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button x:Name="SaveNotesKey" Content="save notes" Style="{StaticResource KeyButton}" Click="SaveNotesKey_Click" />
-                        <TextBlock x:Name="NotesStatus" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="4,0,0,8" TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
             </StackPanel>
         </Border>
 

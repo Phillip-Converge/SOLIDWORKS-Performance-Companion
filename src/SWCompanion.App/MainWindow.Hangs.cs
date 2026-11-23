@@ -199,8 +199,13 @@ public partial class MainWindow
 
     private void CaughtRow_Click(object sender, MouseButtonEventArgs e)
     {
-        if ((sender as FrameworkElement)?.DataContext is not CaughtRow row) return;
-        var x = HangExplainer.For(row.Moment, _winEvents);
+        if ((sender as FrameworkElement)?.DataContext is CaughtRow row) ShowHang(row.Moment);
+    }
+
+    /// <summary>Opens one caught moment's explanation in the panel (from the panel itself, or from the PDM page).</summary>
+    private void ShowHang(Moment moment)
+    {
+        var x = HangExplainer.For(moment, _winEvents);
         HangTitle.Text = x.Title;
         HangWhen.Text = x.When;
         HangWhat.Text = x.WhatHappened;
@@ -217,11 +222,11 @@ public partial class MainWindow
         HangMoreKey.Visibility = Visibility.Visible;
         HangMoreBox.Visibility = Visibility.Collapsed;
         HangTechBox.Visibility = Visibility.Collapsed;
-        _hangShown = row.Moment;
+        _hangShown = moment;
         HangList.Visibility = Visibility.Collapsed;
         HangDetail.Visibility = Visibility.Visible;
         HangDetailScroll.ScrollToTop();
-        _log.Write($"came and went: you opened the explanation for \"{row.Moment.Title}\" ({row.Moment.Start:HH:mm:ss}).");
+        _log.Write($"came and went: you opened the explanation for \"{moment.Title}\" ({moment.Start:HH:mm:ss}).");
     }
 
     private Moment? _hangShown;

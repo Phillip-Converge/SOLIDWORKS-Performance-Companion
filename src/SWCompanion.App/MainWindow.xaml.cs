@@ -773,6 +773,7 @@ public partial class MainWindow : Window
         CaughtRows.ItemsSource = caught.Select(CaughtRow.From).ToList();
         CaughtBadge.Visibility = _catcher.Unseen > 0 ? Visibility.Visible : Visibility.Collapsed;
         CaughtBadgeText.Text = $"{_catcher.Unseen} caught";
+        ShowPdm();
     }
 
     private void CaughtSeenKey_Click(object sender, RoutedEventArgs e)
@@ -1100,6 +1101,7 @@ public partial class MainWindow : Window
         _checks = _baseChecks.Concat(vaultRows).OrderBy(c => Array.IndexOf(order, c.Group)).ToList();
         _lastCheckupAt = DateTime.Now;
         ShowCheckup();
+        ShowPdm();
     }
 
     private void ShowVault()

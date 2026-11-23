@@ -36,6 +36,7 @@ public partial class MainWindow
         SetupHangs();
         SetupLoads();
         SetupAsk();
+        SetupPdm();
         SetupSideVitals();
         // Redraw the conversation when it changes, and keep the newest message in view.
         _chat.Changed += ShowChat;
@@ -307,7 +308,7 @@ public partial class MainWindow
     {
         var pages = new (string Name, ScrollViewer View, Button Nav)[]
         {
-            ("performance", PagePerformance, NavPerformance), ("fixes", PageFixes, NavFixes), ("crashes", PageCrashes, NavCrashes),
+            ("performance", PagePerformance, NavPerformance), ("fixes", PageFixes, NavFixes), ("crashes", PageCrashes, NavCrashes), ("pdm", PagePdm, NavPdm),
             ("details", PageDetails, NavDetails), ("settings", PageSettings, NavSettings),
         };
         foreach (var (name, view, nav) in pages)

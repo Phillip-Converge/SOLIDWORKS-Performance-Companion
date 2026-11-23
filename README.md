@@ -32,6 +32,7 @@ Created by **Phillip Lewis**, Phillip.Lewis@converge.design. Questions, ideas an
   Windows' memory and object limits, antivirus, folder permissions, VPN, SOLIDWORKS file locations, PDM client
   settings), each with plain step-by-step instructions.
 - **Crashes.** Reads SOLIDWORKS's own crash records and explains them.
+- **PDM.** SOLIDWORKS PDM on one page: the client and vault views on your PC, today's PDM-related hold-ups, the PDM settings that slow things down, the vault's servers and how your PC reaches them, and a plain guide to how PDM affects speed.
 - **The basics at a glance.** Small live charts of the processor, each core, memory, graphics card, disk and network.
 - **Ask your own AI (optional).** Ask Claude, ChatGPT or an AI running on your own PC about what's happening, using
   your own account. Off unless you set it up.
