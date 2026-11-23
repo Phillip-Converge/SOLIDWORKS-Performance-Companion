@@ -40,7 +40,8 @@ public static class CheckupReader
             pageAuto,
             pageText,
             ReadPageFileUsage(),
-            drive, free, total);
+            drive, free, total,
+            Checkup.Requirements.Read());
     }
 
     /// <summary>The Windows drive and its free space (a read of the drive's size, nothing else).</summary>

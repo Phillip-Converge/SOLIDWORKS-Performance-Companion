@@ -34,6 +34,7 @@ public static class CheckupEvaluator
         HandleLimits(f) with { Plain = Analogies.Lead + Analogies.ObjectLimits + " " + Analogies.Registry },
         PageFile(f) with { Plain = Analogies.Lead + Analogies.PageFileSetting },
         FreeSpace(f),
+        Checkup.Requirements.Evaluate(f.Requirements),
         Graphics(gpu) with { Plain = Analogies.Lead + Analogies.GraphicsCard, Group = "SOLIDWORKS" },
     ];
 

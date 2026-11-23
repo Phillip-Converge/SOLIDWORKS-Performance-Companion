@@ -37,7 +37,8 @@ public sealed record CheckupFacts(
     double? PageFileUsagePercent,
     string? SystemDrive = null,
     double? SystemDriveFreeGb = null,
-    double? SystemDriveTotalGb = null);
+    double? SystemDriveTotalGb = null,
+    RequirementsFacts? Requirements = null);
 
 public enum CheckStatus { Good, Look, Problem, Unknown }
 
