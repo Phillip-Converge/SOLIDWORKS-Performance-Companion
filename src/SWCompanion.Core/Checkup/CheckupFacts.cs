@@ -16,6 +16,9 @@ namespace SWCompanion.Core.Checkup;
 /// <param name="PageFileAutomatic">True if Windows manages the page file size.</param>
 /// <param name="PageFileDescription">The page file setting as Windows stores it.</param>
 /// <param name="PageFileUsagePercent">The "Paging File % Usage" counter.</param>
+/// <param name="SystemDrive">The Windows drive, e.g. "C:".</param>
+/// <param name="SystemDriveFreeGb">Free space on the Windows drive, in GB (null if it couldn't be read).</param>
+/// <param name="SystemDriveTotalGb">Size of the Windows drive, in GB.</param>
 public sealed record CheckupFacts(
     string? PowerPlanName,
     Guid? PowerPlanGuid,
@@ -31,7 +34,10 @@ public sealed record CheckupFacts(
     int? UserLimitWow,
     bool? PageFileAutomatic,
     string? PageFileDescription,
-    double? PageFileUsagePercent);
+    double? PageFileUsagePercent,
+    string? SystemDrive = null,
+    double? SystemDriveFreeGb = null,
+    double? SystemDriveTotalGb = null);
 
 public enum CheckStatus { Good, Look, Problem, Unknown }
 

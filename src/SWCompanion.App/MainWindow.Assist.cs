@@ -37,6 +37,7 @@ public partial class MainWindow
         SetupLoads();
         SetupAsk();
         SetupPdm();
+        SetupLicense();
         SetupSideVitals();
         // Redraw the conversation when it changes, and keep the newest message in view.
         _chat.Changed += ShowChat;

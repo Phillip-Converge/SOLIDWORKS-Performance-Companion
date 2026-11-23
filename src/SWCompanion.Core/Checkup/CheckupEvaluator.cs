@@ -33,8 +33,45 @@ public static class CheckupEvaluator
         Battery(f) with { Plain = Analogies.Lead + Analogies.Battery },
         HandleLimits(f) with { Plain = Analogies.Lead + Analogies.ObjectLimits + " " + Analogies.Registry },
         PageFile(f) with { Plain = Analogies.Lead + Analogies.PageFileSetting },
+        FreeSpace(f),
         Graphics(gpu) with { Plain = Analogies.Lead + Analogies.GraphicsCard, Group = "SOLIDWORKS" },
     ];
+
+    /// <summary>Free space on the Windows drive: below this is a problem, below <see cref="FreeSpaceLook"/> worth a look.</summary>
+    public const double FreeSpaceProblemGb = 10, FreeSpaceLookGb = 20;
+
+    /// <summary>
+    /// Free space on the Windows drive. Windows grows the page file there when memory runs short, and SOLIDWORKS writes its
+    /// temporary and backup files there; a nearly full drive makes both slow or fail (Microsoft recommends leaving room for
+    /// the page file to grow).
+    /// </summary>
+    private static CheckResult FreeSpace(CheckupFacts f)
+    {
+        const string id = "free-space", title = "free space on the Windows drive";
+        const string plain = Analogies.Lead + "the Windows drive is the PC's workbench. When it's nearly full there's nowhere to " +
+                             "spread out: Windows can't grow its memory overflow (the page file), and SOLIDWORKS has no room for its " +
+                             "temporary and backup copies while it opens and saves.";
+        const string fix =
+            "1. Settings > System > Storage: look at what's using the space, and turn on Storage Sense or use \"Cleanup recommendations\". " +
+            "2. Disk Cleanup (search for it, run it as administrator) > \"Clean up system files\": old Windows update files are often the biggest. " +
+            "3. Empty the Recycle Bin and look through Downloads. " +
+            "4. Old SOLIDWORKS download folders (Documents\\SOLIDWORKS Downloads) for versions no longer installed can go; keep the current one, it's needed to repair or change the installation. " +
+            "5. With PDM: in the vault view, Tools > Clear Local Cache on folders you're not working in, after checking in your files there. " +
+            "Ask your IT team before deleting anything you're unsure about.";
+        if (f.SystemDriveFreeGb is not { } free || f.SystemDriveTotalGb is not { } total)
+            return new(id, title, CheckStatus.Unknown, "The free space on the Windows drive couldn't be read.", "", SupportPractice, plain);
+        string drive = f.SystemDrive ?? "The Windows drive";
+        string amount = $"{drive} has {free:0.#} GB free of {total:0} GB";
+        if (free < FreeSpaceProblemGb)
+            return new(id, title, CheckStatus.Problem,
+                $"{amount}. That's very little: Windows can't grow its page file when memory runs short, and saves and updates can fail.",
+                fix, SupportPractice, plain);
+        if (free < FreeSpaceLookGb)
+            return new(id, title, CheckStatus.Look,
+                $"{amount}. Keeping at least {FreeSpaceLookGb:0} GB free leaves room for the page file to grow and for SOLIDWORKS's temporary files.",
+                fix, SupportPractice, plain);
+        return new(id, title, CheckStatus.Good, $"{amount}.", "", SupportPractice, plain);
+    }
 
     private const string PowerFix =
         "Plugged in, open Control Panel > Hardware and Sound > Power Options and choose \"High performance\" " +

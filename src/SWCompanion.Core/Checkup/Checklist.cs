@@ -16,6 +16,9 @@ public sealed record FileLocationEntry(string Setting, string Path, bool Exists,
 /// <param name="FileLocations">Every folder in SOLIDWORKS's File Locations.</param>
 /// <param name="PdmInstalled">The SOLIDWORKS PDM client is installed.</param>
 /// <param name="VaultViews">Names of local vault views on this PC.</param>
+/// <param name="SymbolLibraries">Each "Symbol Library Folders" File Location and whether it holds gtol.sym, SOLIDWORKS's symbol
+/// library (the diameter, degree and tolerance symbols). Null when it couldn't be read.</param>
+/// <param name="GtolFoundAt">A folder on this PC where gtol.sym actually is, for the fix (null if none was found).</param>
 public sealed record ChecklistFacts(
     int? ExplorerLaunchTo,
     int? ShowRecent,
@@ -24,7 +27,9 @@ public sealed record ChecklistFacts(
     string? SolidWorksYear,
     IReadOnlyList<FileLocationEntry> FileLocations,
     bool PdmInstalled,
-    IReadOnlyList<string> VaultViews);
+    IReadOnlyList<string> VaultViews,
+    IReadOnlyList<(string Folder, bool HasGtol)>? SymbolLibraries = null,
+    string? GtolFoundAt = null);
 
 /// <summary>Reads the checklist settings. READ ONLY: registry reads and "does this folder exist?" checks only.</summary>
 public static class ChecklistReader
@@ -39,7 +44,41 @@ public static class ChecklistReader
         var views = SubKeys(Registry.LocalMachine, @"SOFTWARE\SolidWorks\Applications\PDMWorks Enterprise\Databases");
         bool pdm = Exists(Registry.LocalMachine, @"SOFTWARE\SolidWorks\Applications\PDMWorks Enterprise");
 
-        return new ChecklistFacts(launchTo, showRecent, showFrequent, ReadIndexedFolders(), year, locations, pdm, views);
+        var symbols = year is null ? null : locations
+            .Where(l => string.Equals(l.Setting, SymbolLibrarySetting, StringComparison.OrdinalIgnoreCase))
+            .Select(l => (l.Path, l.Exists && PathExists(Path.Combine(l.Path, GtolFile))))
+            .ToList();
+        return new ChecklistFacts(launchTo, showRecent, showFrequent, ReadIndexedFolders(), year, locations, pdm, views,
+            symbols, year is null ? null : FindGtol(year));
+    }
+
+    /// <summary>The File Locations entry for SOLIDWORKS's symbol library, and the library file itself.</summary>
+    public const string SymbolLibrarySetting = "Symbol Library Folders", GtolFile = "gtol.sym";
+
+    /// <summary>Where gtol.sym is on this PC: SOLIDWORKS's shared data folder for that year first, then its program folder.</summary>
+    private static string? FindGtol(string year)
+    {
+        try
+        {
+            var places = new List<string>
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "SolidWorks", $"SOLIDWORKS {year}", "lang"),
+            };
+            using (var setup = Registry.LocalMachine.OpenSubKey($@"SOFTWARE\SolidWorks\SOLIDWORKS {year}\Setup"))
+                if (setup?.GetValue("SolidWorks Folder") is string install) places.Add(Path.Combine(install, "lang"));
+            foreach (var lang in places.Where(Directory.Exists))
+            {
+                // English first (the usual one), then any other language folder.
+                var folders = Directory.GetDirectories(lang).OrderBy(d => Path.GetFileName(d).Equals("english", StringComparison.OrdinalIgnoreCase) ? 0 : 1);
+                foreach (var folder in folders)
+                    if (File.Exists(Path.Combine(folder, GtolFile))) return folder;
+            }
+        }
+        catch
+        {
+            // couldn't look: the fix then just says where it usually is
+        }
+        return null;
     }
 
     /// <summary>Folders someone added to Windows Search's index (not Windows' own defaults), from its own list of rules.</summary>
@@ -157,6 +196,7 @@ public static class ChecklistEvaluator
         QuickAccess(f),
         SearchPaths(f),
         FileLocations(f),
+        SymbolLibrary(f),
         ExternalReferenceSearch(),
         PdmAddIn(f),
     ];
@@ -241,6 +281,37 @@ public static class ChecklistEvaluator
         if (network) parts.Add("Some missing ones are on the network, where SOLIDWORKS can wait a long time for a server that doesn't answer.");
         return new("file-locations", "file locations", network ? CheckStatus.Problem : CheckStatus.Look,
             string.Join(" ", parts), fix, Source, plain, "SOLIDWORKS");
+    }
+
+    /// <summary>
+    /// The symbol library: when the "Symbol Library Folders" File Location doesn't hold gtol.sym (often after an upgrade
+    /// moved folders), drawings show the text &lt;MOD-DIAM&gt; instead of the diameter symbol, and other symbols go missing too.
+    /// </summary>
+    private static CheckResult SymbolLibrary(ChecklistFacts f)
+    {
+        const string id = "symbol-library", title = "symbol library (gtol.sym)";
+        const string plain = Analogies.Lead + "the symbol library is SOLIDWORKS's box of special characters for drawings: the " +
+                             "diameter sign, degrees, plus-or-minus, tolerance frames. If its address is wrong, SOLIDWORKS can't find " +
+                             "the box and writes the symbol's code name instead, like <MOD-DIAM>.";
+        if (f.SolidWorksYear is null || f.SymbolLibraries is null)
+            return new(id, title, CheckStatus.Unknown, "SOLIDWORKS's symbol library location couldn't be read.", "", Source, plain, "SOLIDWORKS");
+
+        string where = f.GtolFoundAt is { } at
+            ? $"On this PC it is in {at}."
+            : $"It's usually in C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS {f.SolidWorksYear}\\lang\\english, or the lang\\english folder of the SOLIDWORKS program folder.";
+        string fix = "In SOLIDWORKS: Tools > Options > System Options > File Locations. In \"Show folders for\" choose \"Symbol Library File\". " +
+                     "Delete the folder listed there and add the folder that contains gtol.sym. " + where + " Click OK; drawings show the right symbols the next time they're opened.";
+        if (f.SymbolLibraries.Count == 0)
+            return new(id, title, CheckStatus.Look,
+                "SOLIDWORKS has no folder set for its symbol library, so drawings may show codes such as <MOD-DIAM> instead of the diameter symbol.",
+                fix, Source, plain, "SOLIDWORKS");
+        if (f.SymbolLibraries.Any(s => s.HasGtol))
+            return new(id, title, CheckStatus.Good,
+                "The symbol library folder contains gtol.sym, so drawings can show the diameter and other symbols.", "", Source, plain, "SOLIDWORKS");
+        return new(id, title, CheckStatus.Look,
+            $"The symbol library folder ({f.SymbolLibraries[0].Folder}) doesn't contain gtol.sym, so drawings may show codes such as " +
+            "<MOD-DIAM> instead of the diameter symbol. This often happens after an upgrade moves folders.",
+            fix, Source, plain, "SOLIDWORKS");
     }
 
     /// <summary>"C:\Program Files\Dassault Systemes\X\SOLIDWORKS\lang\english" -> "C:\Program Files\Dassault Systemes\X".</summary>

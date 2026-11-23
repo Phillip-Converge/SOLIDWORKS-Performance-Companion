@@ -56,6 +56,21 @@ public static class HangExplainer
         return new HangExplanation(m.Title, when, what, why, tryThis, look, saw, Deeper(m.Kind), technical);
     }
 
+    /// <summary>
+    /// For slow drawing saves: since SOLIDWORKS 2020, each drawing saved normally also stores data so it can be opened in
+    /// Detailing mode later. If nobody uses Detailing mode, that extra data only slows every save down.
+    /// </summary>
+    public static readonly string[] DrawingSaveTips =
+    [
+        "If nobody opens your drawings in Detailing mode, stop saving the extra Detailing mode data. In SOLIDWORKS 2022 and later it's set per drawing: " +
+        "with the drawing open, Tools > Options > Document Properties > Performance, untick \"Include Detailing Mode data when saving\". Do the same in " +
+        "your drawing templates so new drawings start that way. (In 2020 and 2021 it's in System Options > Drawings > Performance.) " +
+        "The drawing then can't be opened in Detailing mode until it's saved again with the option ticked.",
+        "Drawings last saved in SOLIDWORKS 2021 or earlier have that option switched on when you open them in 2022 or later, which is a common reason " +
+        "saves get slower after an upgrade. Your IT team can change that default for older drawings (SOLIDWORKS's \"Include Detailing Mode Data when " +
+        "saving\" setting under Drawings, per user).",
+    ];
+
     private static readonly string[] EventViewer =
     [
         "Open Event Viewer (right-click Start > Event Viewer), then Windows Logs > Application and System. Look at the minute this happened.",
@@ -117,11 +132,20 @@ public static class HangExplainer
                     EventViewer);
 
             case "slow-save":
+            {
+                IReadOnlyList<string> tries =
+                [
+                    "Try saving the same file to a local folder. If that's fast, the network or the server is the hold-up.",
+                    "Ask your IT team whether SOLIDWORKS files and folders can be excluded from antivirus scanning (Microsoft documents how).",
+                ];
+                // Drawings: the Detailing mode data saved with each drawing is a common, little-known cause.
+                if (m.Title.Contains(".slddrw", StringComparison.OrdinalIgnoreCase))
+                    tries = [.. DrawingSaveTips, .. tries];
                 return ("Saving this file was slow." + detail,
-                    "Slow saves usually come from saving to a network folder or vault, the antivirus scanning the file as it's written, or a very large file.",
-                    ["Try saving the same file to a local folder. If that's fast, the network or the server is the hold-up.",
-                     "Ask your IT team whether SOLIDWORKS files and folders can be excluded from antivirus scanning (Microsoft documents how)."],
-                    EventViewer);
+                    "Slow saves usually come from saving to a network folder or vault, the antivirus scanning the file as it's written, or a very large file." +
+                    (tries.Count > 2 ? " Drawings also save extra data for Detailing mode, which can make every save slower." : ""),
+                    tries, EventViewer);
+            }
 
             case "slow-rebuild":
                 return ("A rebuild took a long time." + detail,

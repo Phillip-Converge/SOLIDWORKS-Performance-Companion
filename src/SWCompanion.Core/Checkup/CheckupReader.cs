@@ -22,6 +22,7 @@ public static class CheckupReader
         var (planGuid, planName) = ReadActivePlan();
         var (hasBattery, onBattery, percent) = ReadBattery();
         var (pageAuto, pageText) = ReadPageFileSetting();
+        var (drive, free, total) = ReadSystemDrive();
 
         return new CheckupFacts(
             planName,
@@ -38,7 +39,25 @@ public static class CheckupReader
             ReadInt(HandleKeyWow, "USERProcessHandleQuota"),
             pageAuto,
             pageText,
-            ReadPageFileUsage());
+            ReadPageFileUsage(),
+            drive, free, total);
+    }
+
+    /// <summary>The Windows drive and its free space (a read of the drive's size, nothing else).</summary>
+    private static (string?, double?, double?) ReadSystemDrive()
+    {
+        try
+        {
+            var root = Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
+            if (string.IsNullOrEmpty(root)) return (null, null, null);
+            var d = new DriveInfo(root);
+            const double gb = 1024.0 * 1024 * 1024;
+            return (root.TrimEnd('\\'), d.AvailableFreeSpace / gb, d.TotalSize / gb);
+        }
+        catch
+        {
+            return (null, null, null);
+        }
     }
 
     // ---- power ----

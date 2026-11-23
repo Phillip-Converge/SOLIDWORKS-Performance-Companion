@@ -992,6 +992,28 @@
             </StackPanel>
         </Border>
 
+        <!-- ===== licence server: opt-in port test ===== -->
+        <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+            <StackPanel>
+                <TextBlock Text="licence server" Style="{StaticResource SectionName}" Margin="0,0,0,8" />
+                <TextBlock x:Name="LicenseFound" FontSize="13.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,8" />
+                <ItemsControl x:Name="LicenseResults" Margin="0,0,0,6">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontSize="13.5" LineHeight="19" TextWrapping="Wrap" Margin="0,0,0,6" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <WrapPanel>
+                    <Button x:Name="LicenseTestKey" Content="test the licence server" Style="{StaticResource KeyButton}" Margin="0" Padding="10,3"
+                            Click="LicenseTestKey_Click" />
+                    <TextBlock x:Name="LicenseTestNote" Style="{StaticResource Label}" VerticalAlignment="Center" Margin="10,0,0,0" TextWrapping="Wrap" />
+                </WrapPanel>
+                <TextBlock Style="{StaticResource Label}" TextWrapping="Wrap" FontSize="12" Margin="0,8,0,0"
+                           Text="Only when you click: the Companion connects to the licence server's ports, times the answer and disconnects straight away. Nothing is sent, and it never touches your licences. Every test is written to the activity log." />
+            </StackPanel>
+        </Border>
+
         <!-- ===== 02 cpu ===== -->
         <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
             <StackPanel>
