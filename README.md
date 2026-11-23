@@ -16,6 +16,7 @@ It only watches. It never changes SOLIDWORKS, its settings or your files.
 Created by **Phillip Lewis**, Phillip.Lewis@converge.design. Questions, ideas and problems are welcome by e-mail.
 
 ---
+<img width="1931" height="1042" alt="Side-by-Side-Solidworks" src="https://github.com/user-attachments/assets/8b7e7c5e-a42b-4906-a275-524ad8f83e2c" />
 
 ## What it does
 
