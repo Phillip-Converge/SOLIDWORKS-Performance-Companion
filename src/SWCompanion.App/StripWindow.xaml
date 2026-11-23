@@ -1,7 +1,7 @@
 <Window x:Class="SWCompanion.App.StripWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Companion for SOLIDWORKS" Width="176" SizeToContent="Height"
+        Title="Companion for SOLIDWORKS" Icon="Companion.ico" Width="176" SizeToContent="Height"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
         Topmost="True" ShowInTaskbar="True" ShowActivated="False">
     <!--

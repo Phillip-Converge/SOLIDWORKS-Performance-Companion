@@ -6,7 +6,13 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>SWCompanion</AssemblyName>
     <RootNamespace>SWCompanion.App</RootNamespace>
+    <!-- The program's icon in File Explorer, the Start menu and pinned taskbar buttons (made by scripts\Make-Icon.ps1). -->
+    <ApplicationIcon>Companion.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- The same icon for the windows themselves: top-left corner and the taskbar while running. -->
+    <Resource Include="Companion.ico" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SWCompanion.Core\SWCompanion.Core.csproj" />
     <ProjectReference Include="..\SWCompanion.Link\SWCompanion.Link.csproj" />
