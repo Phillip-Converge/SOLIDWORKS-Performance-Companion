@@ -617,7 +617,7 @@ public partial class MainWindow : Window
         CrashSummary.Text = $"{_crashes.Count} crash{(_crashes.Count == 1 ? "" : "es")} since {first:MMM yyyy}, {lastMonth} in the last 30 days.";
         CrashRows.ItemsSource = _crashes.Take(15).Select(c => new CrashRow(
             $"{c.When:d MMM yyyy HH:mm}   SOLIDWORKS {CrashExplainer.VersionName(c.Version)}" + (c.Lead is { } l ? $"   in {l}" : ""),
-            CrashExplainer.Summary(c))).ToList();
+            CrashExplainer.Summary(c), c)).ToList();
         if (CrashExplainer.Pattern(_crashes) is { } p)
         {
             CrashPatternTitle.Text = p.Title;
@@ -672,7 +672,7 @@ public partial class MainWindow : Window
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{dir}\"") { UseShellExecute = true });
     }
 
-    private sealed record CrashRow(string Line, string Detail);
+    private sealed record CrashRow(string Line, string Detail, CrashRecord Record);
 
     // ---- obvious issues ----
 

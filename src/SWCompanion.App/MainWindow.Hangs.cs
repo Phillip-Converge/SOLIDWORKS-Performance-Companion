@@ -222,6 +222,7 @@ public partial class MainWindow
         HangMoreKey.Visibility = Visibility.Visible;
         HangMoreBox.Visibility = Visibility.Collapsed;
         HangTechBox.Visibility = Visibility.Collapsed;
+        HangReportNote.Visibility = x.Specific ? Visibility.Collapsed : Visibility.Visible;
         _hangShown = moment;
         HangList.Visibility = Visibility.Collapsed;
         HangDetail.Visibility = Visibility.Visible;

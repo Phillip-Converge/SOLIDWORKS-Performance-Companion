@@ -531,6 +531,13 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    <!-- Send this to the developer: on every explanation, with a note when the Companion had no specific answer -->
+                    <Border x:Name="HangReportNote" Visibility="Collapsed" Style="{StaticResource AnswerPanel}" Margin="0,8,0,0">
+                        <TextBlock TextWrapping="Wrap" FontSize="13" LineHeight="18"
+                                   Text="The Companion doesn't have a specific explanation for this yet. Sending it to the developer helps a future version explain it." />
+                    </Border>
+                    <Button x:Name="HangReportKey" Content="Send this to the developer" Style="{StaticResource KeyButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
+                            Click="HangReport_Click" ToolTip="Shows a short report with names hidden. You read it, can change it, and send it from your own e-mail." />
                     <!-- Ask your own AI about this item (only when Ask AI is set up) -->
                     <Button x:Name="HangAskKey" Content="Ask AI about this" Style="{StaticResource KeyButton}" HorizontalAlignment="Left" Margin="0,8,0,0"
                             Click="HangAsk_Click" Visibility="Collapsed" />
@@ -682,6 +689,8 @@
                                 <StackPanel>
                                     <TextBlock Text="{Binding Line}" FontSize="13.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding Detail}" FontSize="12.5" Foreground="{StaticResource Muted}" TextWrapping="Wrap" />
+                                    <Button Content="send this to the developer" Style="{StaticResource KeyButton}" HorizontalAlignment="Left" Padding="8,1" Margin="0,5,0,0"
+                                            Click="CrashReport_Click" ToolTip="Shows a short report about this crash with names hidden. You read it, can change it, and send it from your own e-mail." />
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
@@ -1339,6 +1348,17 @@
                             <WrapPanel>
 <Button x:Name="ThemeKey" Content="dark mode" Style="{StaticResource KeyButton}" Margin="0" Padding="10,3"
                         VerticalAlignment="Center" Click="ThemeKey_Click" ToolTip="Switch between the light and dark look. The Companion reopens in the new look." />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                    <!-- Report a problem the Companion didn't catch or explain -->
+                    <Border Style="{StaticResource ModulePanel}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Report a problem" Style="{StaticResource SectionName}" Margin="0,0,0,10" />
+                            <TextBlock Style="{StaticResource Label}" TextWrapping="Wrap" Margin="0,0,0,10" FontSize="12.5" LineHeight="18"
+                                       Text="SOLIDWORKS slowed down or misbehaved and the Companion didn't catch it, or explained it wrongly? Send a short report to the developer so a future version can explain it. You see the report first, with names already hidden, and send it from your own e-mail. The Companion never sends anything itself." />
+                            <WrapPanel>
+                                <Button Content="report a problem" Style="{StaticResource KeyButton}" Margin="0" Padding="10,3" Click="GeneralReport_Click" />
                             </WrapPanel>
                         </StackPanel>
                     </Border>

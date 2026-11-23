@@ -11,6 +11,9 @@ public sealed record HangExplanation(string Title, string When, string WhatHappe
 {
     /// <summary>"Words used here": plain explanations of the computer words in this explanation.</summary>
     public IReadOnlyList<Explain.Term> Words => Explain.Glossary.Find(string.Join(" ", [Title, WhatHappened, WhyItMatters, .. TryThis]));
+
+    /// <summary>False when the Companion had no specific explanation and fell back to its general answer.</summary>
+    public bool Specific => WhyItMatters != HangExplainer.GenericWhy;
 }
 
 /// <summary>
@@ -22,6 +25,9 @@ public static class HangExplainer
 {
     /// <summary>Windows events this close to a moment are shown with it ("what Windows saw at the same time").</summary>
     public static readonly TimeSpan Nearby = TimeSpan.FromSeconds(30);
+
+    /// <summary>The "why it matters" line of the general answer, used when the Companion doesn't know this kind of moment.</summary>
+    public const string GenericWhy = "It came and went, but was long enough to notice.";
 
     /// <summary>The Windows events that happened during the moment or within <see cref="Nearby"/> of it, oldest first.</summary>
     public static IReadOnlyList<EventFinding> Around(Moment m, IEnumerable<EventFinding> events) =>
@@ -271,7 +277,7 @@ public static class HangExplainer
 
             default:
                 return ((string.IsNullOrWhiteSpace(m.Detail) ? "The Companion noticed this while you worked." : m.Detail.Trim()),
-                    "It came and went, but was long enough to notice.",
+                    GenericWhy,
                     ["If it keeps happening, note what you were doing each time."],
                     EventViewer);
         }
