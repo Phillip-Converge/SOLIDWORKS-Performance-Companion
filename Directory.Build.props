@@ -6,6 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Company>Companion for SOLIDWORKS</Company>
     <Product>Companion for SOLIDWORKS</Product>
-    <Version>0.1.2</Version>
+    <Version>0.1.3</Version>
   </PropertyGroup>
 </Project>
